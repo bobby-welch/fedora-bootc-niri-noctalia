@@ -1,33 +1,75 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "pinDigests": true,
   "packageRules": [
     {
       "description": "Keep the Fedora base fresh automatically",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["quay.io/fedora/fedora-bootc"],
-      "matchUpdateTypes": ["digest", "pin"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "quay.io/fedora/fedora-bootc"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "pin"
+      ],
       "automerge": true
     },
     {
       "description": "Fedora release upgrades are a deliberate manual change",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["quay.io/fedora/fedora-bootc"],
-      "matchUpdateTypes": ["major"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "quay.io/fedora/fedora-bootc"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "enabled": false
     },
     {
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pin"
+      ],
       "automerge": true
+    },
+    {
+      "description": "Stay on cosign v2 and installer v3: bootc verifies the classic signature format",
+      "matchPackageNames": [
+        "sigstore/cosign",
+        "sigstore/cosign-installer"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "cosign-release is a version input, not a pinnable action reference",
+      "matchPackageNames": [
+        "sigstore/cosign"
+      ],
+      "pinDigests": false
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
       "description": "Nerd Fonts release (checksum must be updated by hand)",
-      "managerFilePatterns": ["/(^|/)Containerfile$/"],
+      "managerFilePatterns": [
+        "/(^|/)Containerfile$/"
+      ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG NERD_FONTS_VERSION=(?<currentValue>\\S+)"
       ],
