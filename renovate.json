@@ -61,6 +61,13 @@
         "sigstore/cosign"
       ],
       "pinDigests": false
+    },
+    {
+      "description": "Wait before adopting new GitHub Actions releases: compromised releases are usually caught and pulled within days",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "minimumReleaseAge": "3 days"
     }
   ],
   "customManagers": [
