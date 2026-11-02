@@ -1,0 +1,17 @@
+{
+  "default": [{ "type": "insecureAcceptAnything" }],
+  "transports": {
+    "docker": {
+      "ghcr.io/bobby-welch/fedora-bootc-niri-noctalia": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/pki/containers/fedora-bootc-niri-noctalia.pub",
+          "signedIdentity": { "type": "matchRepository" }
+        }
+      ]
+    },
+    "docker-daemon": {
+      "": [{ "type": "insecureAcceptAnything" }]
+    }
+  }
+}

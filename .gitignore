@@ -1,0 +1,3 @@
+# Never commit the private signing key.
+cosign.key
+output/

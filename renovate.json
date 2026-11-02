@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "pinDigests": true,
+  "packageRules": [
+    {
+      "description": "Keep the Fedora base fresh automatically",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["quay.io/fedora/fedora-bootc"],
+      "matchUpdateTypes": ["digest", "pin"],
+      "automerge": true
+    },
+    {
+      "description": "Fedora release upgrades are a deliberate manual change",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["quay.io/fedora/fedora-bootc"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "automerge": true
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Nerd Fonts release (checksum must be updated by hand)",
+      "managerFilePatterns": ["/(^|/)Containerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG NERD_FONTS_VERSION=(?<currentValue>\\S+)"
+      ],
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    }
+  ]
+}

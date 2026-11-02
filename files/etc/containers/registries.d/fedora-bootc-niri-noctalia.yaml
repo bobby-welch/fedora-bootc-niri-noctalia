@@ -1,0 +1,3 @@
+docker:
+  ghcr.io/bobby-welch/fedora-bootc-niri-noctalia:
+    use-sigstore-attachments: true

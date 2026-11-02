@@ -1,0 +1,3 @@
+# Niri has no polkit agent; use Noctalia's.
+[shell]
+polkit_agent = true

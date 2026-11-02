@@ -1,0 +1,15 @@
+[Unit]
+Description=Add the Flathub remote
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=!/var/lib/flatpak/.flathub-added
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+ExecStartPost=/usr/bin/touch /var/lib/flatpak/.flathub-added
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

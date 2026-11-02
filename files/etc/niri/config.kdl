@@ -1,0 +1,187 @@
+// fedora-bootc-niri-noctalia: system default config
+//
+// Provides a complete first-login desktop without personal dotfiles.
+// User-specific settings are managed separately with Chezmoi.
+//
+// No device-specific output settings or generated theme includes.
+
+// Input
+input {
+    keyboard {
+        xkb {
+            layout "us"
+            options "ctrl:nocaps"
+        }
+        repeat-delay 300
+        repeat-rate 40
+    }
+
+    touchpad {
+        tap
+        dwt
+        natural-scroll
+        accel-speed 0.4
+        accel-profile "adaptive"
+        scroll-method "two-finger"
+    }
+
+    warp-mouse-to-focus
+}
+
+// Cursor
+cursor {
+    hide-when-typing
+    hide-after-inactive-ms 2000
+}
+
+// Layout
+layout {
+    gaps 5
+    center-focused-column "never"
+
+    preset-column-widths {
+        proportion 0.44
+        proportion 0.50
+        proportion 0.56
+    }
+
+    default-column-width { proportion 0.5; }
+
+    focus-ring { off; }
+
+    border {
+        on
+        width 2
+    }
+}
+
+// Session
+xwayland-satellite { off; }
+spawn-at-startup "noctalia"
+hotkey-overlay { skip-at-startup; }
+prefer-no-csd
+
+// Disable middle-click primary-selection paste.
+clipboard { disable-primary; }
+
+// Window rules
+window-rule {
+    match app-id=r#"^org\.gnome\.Calculator$"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"(?i)(brave|chromium|chrome|firefox)"# title=r#"(?i)^picture[- ]in[- ]picture$"#
+    open-floating true
+    open-focused false
+    default-column-width { fixed 480; }
+    default-window-height { fixed 270; }
+    default-floating-position x=11 y=10 relative-to="bottom-right"
+}
+
+// Keyboard shortcuts
+binds {
+    // Applications and Noctalia
+    Mod+Shift+Slash { show-hotkey-overlay; }
+    Mod+T repeat=false { spawn "ghostty"; }
+    Mod+Return repeat=false { spawn "ghostty"; }
+    Mod+D repeat=false { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Comma repeat=false { spawn "noctalia" "msg" "settings-open"; }
+    Mod+Shift+D repeat=false { spawn "noctalia" "msg" "theme-mode-toggle"; }
+    Mod+Shift+E repeat=false { spawn "noctalia" "msg" "panel-toggle" "session"; }
+    Mod+Shift+C repeat=false { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
+    Super+Alt+L repeat=false { spawn "noctalia" "msg" "session" "lock"; }
+
+    // Screenshots
+    Print repeat=false { spawn "noctalia" "msg" "screenshot-region" "--annotate"; }
+    Ctrl+Print repeat=false { spawn "noctalia" "msg" "screenshot-fullscreen"; }
+    Alt+Print repeat=false { spawn "noctalia" "msg" "screenshot-window"; }
+
+    // Audio and media
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-up"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-down"; }
+    XF86AudioMute allow-when-locked=true { spawn "noctalia" "msg" "volume-mute"; }
+    XF86AudioMicMute allow-when-locked=true { spawn "noctalia" "msg" "mic-mute"; }
+    XF86AudioPlay allow-when-locked=true { spawn "noctalia" "msg" "media" "toggle"; }
+    XF86AudioStop allow-when-locked=true { spawn "noctalia" "msg" "media" "stop"; }
+    XF86AudioPrev allow-when-locked=true { spawn "noctalia" "msg" "media" "previous"; }
+    XF86AudioNext allow-when-locked=true { spawn "noctalia" "msg" "media" "next"; }
+
+    // Brightness
+    XF86MonBrightnessUp allow-when-locked=true { spawn "noctalia" "msg" "brightness-up"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "noctalia" "msg" "brightness-down"; }
+
+    // General
+    Mod+O repeat=false { toggle-overview; }
+    Mod+Q repeat=false { close-window; }
+    Alt+F4 repeat=false { close-window; }
+    // Fallback logout if Noctalia is unavailable (niri asks to confirm).
+    Mod+Ctrl+Shift+E { quit; }
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+
+    // Window navigation
+    Mod+H { focus-column-left; }
+    Mod+L { focus-column-right; }
+    Mod+J { focus-window-or-workspace-down; }
+    Mod+K { focus-window-or-workspace-up; }
+
+    Mod+Shift+H { move-column-left; }
+    Mod+Shift+L { move-column-right; }
+    Mod+Shift+J { move-window-down-or-to-workspace-down; }
+    Mod+Shift+K { move-window-up-or-to-workspace-up; }
+
+    Mod+Home { focus-column-first; }
+    Mod+End { focus-column-last; }
+    Mod+Ctrl+Home { move-column-to-first; }
+    Mod+Ctrl+End { move-column-to-last; }
+
+    // Workspaces
+    Mod+U { focus-workspace-down; }
+    Mod+I { focus-workspace-up; }
+    Mod+Ctrl+U { move-column-to-workspace-down; }
+    Mod+Ctrl+I { move-column-to-workspace-up; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    Mod+Ctrl+1 { move-column-to-workspace 1; }
+    Mod+Ctrl+2 { move-column-to-workspace 2; }
+    Mod+Ctrl+3 { move-column-to-workspace 3; }
+    Mod+Ctrl+4 { move-column-to-workspace 4; }
+    Mod+Ctrl+5 { move-column-to-workspace 5; }
+    Mod+Ctrl+6 { move-column-to-workspace 6; }
+    Mod+Ctrl+7 { move-column-to-workspace 7; }
+    Mod+Ctrl+8 { move-column-to-workspace 8; }
+    Mod+Ctrl+9 { move-column-to-workspace 9; }
+
+    // Arrangement and sizing
+    Mod+BracketLeft { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+    Mod+Ctrl+Comma { consume-window-into-column; }
+    Mod+Ctrl+Period { expel-window-from-column; }
+
+    Mod+W { toggle-column-tabbed-display; }
+    Mod+R { switch-preset-column-width; }
+    Mod+Shift+R { switch-preset-column-width-back; }
+    Mod+Ctrl+Shift+R { switch-preset-window-height; }
+    Mod+Ctrl+R { reset-window-height; }
+
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+C { center-column; }
+
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    Mod+V { toggle-window-floating; }
+    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+}

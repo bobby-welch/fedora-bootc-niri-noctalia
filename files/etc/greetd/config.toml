@@ -1,0 +1,7 @@
+[terminal]
+vt = 1
+
+[default_session]
+# niri-session sets up the systemd user session and D-Bus.
+command = "tuigreet --time --asterisks --remember --remember-user-session --cmd niri-session"
+user = "greetd"
