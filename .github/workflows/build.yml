@@ -82,7 +82,7 @@ jobs:
       - uses: sigstore/cosign-installer@v3
         if: github.event_name != 'pull_request'
         with:
-          cosign-release: "v2.5.0"
+          cosign-release: "v2.6.5"
 
       - name: Sign
         if: github.event_name != 'pull_request'
