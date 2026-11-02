@@ -12,7 +12,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Only PR runs are cancelled: a cancelled main run could push without signing.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   FEDORA_VERSION: "44"
@@ -23,6 +24,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image: ${{ steps.vars.outputs.image }}
+      digest: ${{ steps.push.outputs.digest }}
     steps:
       - name: Free disk space
         run: |
@@ -30,13 +34,18 @@ jobs:
           df -h /
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Set image variables
+        id: vars
         run: |
           name=${GITHUB_REPOSITORY#*/}
+          registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}
           echo "IMAGE_NAME=${name,,}" >> "$GITHUB_ENV"
-          echo "IMAGE_REGISTRY=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+          echo "IMAGE_REGISTRY=${registry}" >> "$GITHUB_ENV"
           echo "DATE_TAG=${FEDORA_VERSION}.$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
+          echo "image=${registry}/${name,,}" >> "$GITHUB_OUTPUT"
 
       - name: Build
         run: |
@@ -46,12 +55,13 @@ jobs:
             -t "localhost/${IMAGE_NAME}:build" .
 
       # Split the image into content-based layers so unchanged files are not
-      # re-downloaded on every update.
+      # re-downloaded on every update. Uses the image's own tool, so this
+      # privileged step runs the pinned base rather than an unpinned pull.
       - name: Rechunk
         run: |
           sudo podman run --rm --privileged \
             -v /var/lib/containers:/var/lib/containers \
-            "quay.io/fedora/fedora-bootc:${FEDORA_VERSION}" \
+            "localhost/${IMAGE_NAME}:build" \
             /usr/libexec/bootc-base-imagectl rechunk \
             "localhost/${IMAGE_NAME}:build" "localhost/${IMAGE_NAME}:final"
 
@@ -61,36 +71,50 @@ jobs:
           test "$label" = 1 || { echo "containers.bootc label missing after rechunk" >&2; exit 1; }
           sudo podman run --rm "localhost/${IMAGE_NAME}:final" bootc container lint
 
+      # Only main publishes; PRs and dispatches from other branches just build.
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+        if: github.ref == 'refs/heads/main'
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$REGISTRY_TOKEN" | sudo podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
       - name: Push
-        if: github.event_name != 'pull_request'
+        id: push
+        if: github.ref == 'refs/heads/main'
         run: |
-          : > /tmp/refs
+          : > /tmp/digests
           for tag in "${DATE_TAG}" "${FEDORA_VERSION}" latest; do
             sudo podman push --digestfile "/tmp/digest-${tag}" \
               "localhost/${IMAGE_NAME}:final" "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}"
-            echo "${IMAGE_REGISTRY}/${IMAGE_NAME}@$(sudo cat "/tmp/digest-${tag}")" >> /tmp/refs
+            echo "$(sudo cat "/tmp/digest-${tag}")" >> /tmp/digests
           done
-          sort -u /tmp/refs
+          test "$(sort -u /tmp/digests | wc -l)" = 1 \
+            || { echo "tags were pushed with different digests" >&2; exit 1; }
+          echo "digest=$(head -n1 /tmp/digests)" >> "$GITHUB_OUTPUT"
 
+  # Separate job so the signing key is only reachable from main: the
+  # signing environment allows main alone, and PR runs never enter it.
+  sign:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: signing
+    permissions:
+      packages: write # attaches the signature in GHCR
+    steps:
       # Stay on cosign v2: containers/image (used by bootc) verifies the
       # classic .sig attachment format, and cosign v3 defaults to the new
       # bundle format.
       - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
-        if: github.event_name != 'pull_request'
         with:
           cosign-release: "v2.6.5"
 
       - name: Sign
-        if: github.event_name != 'pull_request'
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
           COSIGN_PASSWORD: ""
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REF: ${{ needs.build.outputs.image }}@${{ needs.build.outputs.digest }}
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
-          sort -u /tmp/refs | while read -r ref; do
-            cosign sign --yes --key env://COSIGN_PRIVATE_KEY "$ref"
-          done
+          echo "$REGISTRY_TOKEN" | cosign login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "$IMAGE_REF"
