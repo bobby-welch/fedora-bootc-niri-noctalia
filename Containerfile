@@ -138,9 +138,9 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 950:2755
     && grep -qx 'repo_gpgcheck=1' /etc/yum.repos.d/1password.repo \
     && /tmp/build/check-repo-gpgcheck.sh
 
-# Patch fails if upstream changes niri-session, prompting a review.
-RUN /tmp/build/patch-niri-session.sh \
-    && niri validate --config /etc/niri/config.kdl
+# niri-session still calls import-environment without names; systemd 259 only
+# warns. Recheck if the session loses its environment after a systemd update.
+RUN niri validate --config /etc/niri/config.kdl
 
 # Explicit, so the image doesn't depend on Fedora's presets.
 RUN systemctl enable \
