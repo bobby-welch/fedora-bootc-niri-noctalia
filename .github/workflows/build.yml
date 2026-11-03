@@ -78,19 +78,21 @@ jobs:
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: echo "$REGISTRY_TOKEN" | sudo podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
+      # Push once, then point the other tags at that exact manifest: pushing
+      # per tag re-compresses on newer podman and yields different digests.
       - name: Push
         id: push
         if: github.ref == 'refs/heads/main'
         run: |
-          : > /tmp/digests
-          for tag in "${DATE_TAG}" "${FEDORA_VERSION}" latest; do
-            sudo podman push --digestfile "/tmp/digest-${tag}" \
-              "localhost/${IMAGE_NAME}:final" "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}"
-            echo "$(sudo cat "/tmp/digest-${tag}")" >> /tmp/digests
+          sudo podman push --digestfile /tmp/digest \
+            "localhost/${IMAGE_NAME}:final" "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${DATE_TAG}"
+          digest=$(sudo cat /tmp/digest)
+          for tag in "${FEDORA_VERSION}" latest; do
+            sudo skopeo copy --preserve-digests \
+              "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}@${digest}" \
+              "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}"
           done
-          test "$(sort -u /tmp/digests | wc -l)" = 1 \
-            || { echo "tags were pushed with different digests" >&2; exit 1; }
-          echo "digest=$(head -n1 /tmp/digests)" >> "$GITHUB_OUTPUT"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
   # Separate job so the signing key is only reachable from main: the
   # signing environment allows main alone, and PR runs never enter it.
