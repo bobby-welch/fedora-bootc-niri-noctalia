@@ -130,7 +130,8 @@ COPY cosign.pub /etc/pki/containers/fedora-bootc-niri-noctalia.pub
 RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 950:2755 \
     && test "$(stat -c '%g:%a' /opt/1Password/1password-mcp)" = 951:2755 \
     && grep -qx 'gpgcheck=1' /etc/yum.repos.d/1password.repo \
-    && grep -qx 'repo_gpgcheck=1' /etc/yum.repos.d/1password.repo
+    && grep -qx 'repo_gpgcheck=1' /etc/yum.repos.d/1password.repo \
+    && /tmp/build/check-repo-gpgcheck.sh
 
 # Patch fails if upstream changes niri-session, prompting a review.
 RUN /tmp/build/patch-niri-session.sh \

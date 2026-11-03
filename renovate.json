@@ -68,6 +68,13 @@
         "github-actions"
       ],
       "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Same wait for the Nerd Fonts release download",
+      "matchDepNames": [
+        "ryanoasis/nerd-fonts"
+      ],
+      "minimumReleaseAge": "3 days"
     }
   ],
   "customManagers": [
