@@ -24,4 +24,4 @@ switch-local: build
     sudo bootc switch --transport containers-storage localhost/{{image}}:dev
 
 switch-registry owner:
-    sudo bootc switch --enforce-container-sigpolicy ghcr.io/{{owner}}/{{image}}:44
+    sudo bootc switch --enforce-container-sigpolicy ghcr.io/{{owner}}/{{image}}:45

@@ -1,6 +1,6 @@
 # Renovate pins this to a digest and auto-merges digest bumps.
-# Fedora release upgrades (44 -> 45) are a deliberate manual change.
-FROM quay.io/fedora/fedora-bootc:44@sha256:291bda73006a5cfc6d4ac24f9a261915624f9f555d9ff1a426cb412928f152ac
+# Fedora release upgrades (45 -> 46) are a deliberate manual change.
+FROM quay.io/fedora/fedora-bootc:45@sha256:8076cf4ff9d1fda1fcc759c021b8c317fe2b687ae51259e45917c95fed3308bc
 
 # renovate: datasource=github-releases depName=ryanoasis/nerd-fonts
 ARG NERD_FONTS_VERSION=3.5.1
@@ -138,7 +138,7 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 950:2755
     && grep -qx 'repo_gpgcheck=1' /etc/yum.repos.d/1password.repo \
     && /tmp/build/check-repo-gpgcheck.sh
 
-# niri-session still calls import-environment without names; systemd 259 only
+# niri-session still calls import-environment without names; systemd 262 only
 # warns. Recheck if the session loses its environment after a systemd update.
 RUN niri validate --config /etc/niri/config.kdl
 
