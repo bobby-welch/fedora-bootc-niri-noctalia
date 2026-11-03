@@ -13,8 +13,10 @@ shell: build
     sudo podman run --rm -it localhost/{{image}}:dev bash
 
 # Package names in the image (for diffing against ublue-os/base-main).
-packages: build
-    sudo podman run --rm localhost/{{image}}:dev rpm -qa --qf '%{NAME}\n' | sort
+# Build output goes to stderr so stdout is only the list.
+packages:
+    {{just_executable()}} build >&2
+    sudo podman run --rm localhost/{{image}}:dev rpm -qa --qf '%{NAME}\n' | LC_ALL=C sort -u
 
 # Boot this machine into the locally built image (switch back to the
 # registry image afterwards with `just switch-registry OWNER`).

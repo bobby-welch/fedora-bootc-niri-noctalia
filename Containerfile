@@ -18,13 +18,18 @@ COPY files/etc/yum.repos.d/ /etc/yum.repos.d/
 RUN dnf5 install -y \
       linux-firmware \
       alsa-sof-firmware \
+      alsa-ucm \
+      alsa-utils \
       iwlwifi-mld-firmware \
       iwlbluetooth-firmware \
       mesa-dri-drivers \
       mesa-va-drivers \
       mesa-vulkan-drivers \
+      libva-intel-media-driver \
       fwupd \
       upower \
+      thermald \
+      intel-lpmd \
       bluez \
       NetworkManager-wifi \
       NetworkManager-bluetooth \
@@ -143,6 +148,8 @@ RUN systemctl enable \
       tuned.service \
       tuned-ppd.service \
       bluetooth.service \
+      thermald.service \
+      intel_lpmd.service \
       firewalld.service \
       flathub-setup.service
 
