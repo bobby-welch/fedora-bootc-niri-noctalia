@@ -1,0 +1,12 @@
+# inst.stage2 finds the installer by this volume label.
+label: "Niri-Noctalia-Installer"
+grub2:
+  timeout: 10
+  entries:
+    - name: "Install fedora-bootc-niri-noctalia"
+      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Niri-Noctalia-Installer inst.graphical rhgb quiet"
+      initrd: "/images/pxeboot/initrd.img"
+    # Fallback if the GPU driver fails on new hardware; keeps the graphical LUKS flow.
+    - name: "Install fedora-bootc-niri-noctalia (basic graphics)"
+      linux: "/images/pxeboot/vmlinuz inst.stage2=hd:LABEL=Niri-Noctalia-Installer nomodeset inst.graphical"
+      initrd: "/images/pxeboot/initrd.img"
