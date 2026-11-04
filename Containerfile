@@ -78,6 +78,7 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
       git-delta \
       git-lfs \
       gh \
+      just \
       chezmoi \
       neovim \
       bat \
@@ -136,7 +137,8 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 950:2755
     && test "$(stat -c '%g:%a' /opt/1Password/1password-mcp)" = 951:2755 \
     && grep -qx 'gpgcheck=1' /etc/yum.repos.d/1password.repo \
     && grep -qx 'repo_gpgcheck=1' /etc/yum.repos.d/1password.repo \
-    && /tmp/build/check-repo-gpgcheck.sh
+    && /tmp/build/check-repo-gpgcheck.sh \
+    && yq -e '.default[0].type == "reject"' /etc/containers/policy.json > /dev/null
 
 # niri-session still calls import-environment without names; systemd 262 only
 # warns. Recheck if the session loses its environment after a systemd update.
