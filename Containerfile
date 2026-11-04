@@ -93,6 +93,19 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
       dnf5-plugins \
     && dnf5 clean all
 
+# Virtualization for testing images and installers. Socket-activated:
+# no daemon runs until a VM tool connects. Weak deps on, matching the
+# setup the installer was tested with.
+RUN dnf5 install -y \
+      virt-manager \
+      virt-install \
+      virt-viewer \
+      libvirt-daemon-kvm \
+      libvirt-daemon-config-network \
+      qemu-kvm \
+      edk2-ovmf \
+    && dnf5 clean all
+
 # Single-maintainer COPRs: the most fragile dependencies here.
 # Replace each with a Fedora package once one exists.
 RUN dnf5 -y copr enable scottames/ghostty "fedora-$(rpm -E %fedora)-$(uname -m)" \
@@ -153,7 +166,10 @@ RUN systemctl enable \
       thermald.service \
       intel_lpmd.service \
       firewalld.service \
-      flathub-setup.service
+      flathub-setup.service \
+      virtqemud.socket \
+      virtnetworkd.socket \
+      virtstoraged.socket
 
 # Laptop: no inbound SSH. Start sshd manually when needed.
 RUN systemctl disable sshd.service \
@@ -161,18 +177,20 @@ RUN systemctl disable sshd.service \
     && echo "Firewall zone $(firewall-offline-cmd --get-default-zone) allows: $(firewall-offline-cmd --list-services)"
 
 # Remove build helpers, caches, and repo metadata; keep service state in /var/lib.
-RUN rm -rf \
-      /tmp/build \
-      /tmp/nvim.root \
-      /run/dnf \
-      /run/cups \
-      /run/tuned \
-      /run/selinux-policy \
+# A random seed must never ship: every install would start from the same one.
+# /run and /tmp are runtime-only: tmpfiles recreates their contents at boot.
+# Podman mounts .containerenv, secrets and run/systemd/resolve during builds.
+RUN find /run /tmp -mindepth 1 -maxdepth 1 \
+      ! -name .containerenv ! -name secrets ! -name systemd -exec rm -rf {} + \
+    && find /run/systemd -mindepth 1 -maxdepth 1 ! -name resolve -exec rm -rf {} + \
+    && rm -rf \
       /var/cache/ldconfig \
       /var/cache/libX11 \
       /var/cache/libdnf5 \
       /var/cache/swcatalog \
       /var/lib/dnf/repos \
-    && rm -f /var/log/dnf5.log*
+    && rm -f /var/log/dnf5.log* \
+          /var/lib/systemd/random-seed \
+          /var/lib/systemd/catalog/database
 
 RUN bootc container lint

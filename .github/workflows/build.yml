@@ -52,6 +52,7 @@ jobs:
           sudo podman build --pull=newer \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=${DATE_TAG}" \
             -t "localhost/${IMAGE_NAME}:build" .
 
       # Split the image into content-based layers so unchanged files are not
