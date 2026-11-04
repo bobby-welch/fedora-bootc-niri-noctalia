@@ -1,6 +1,6 @@
 # Renovate pins this to a digest and auto-merges digest bumps.
 # Fedora release upgrades (45 -> 46) are a deliberate manual change.
-FROM quay.io/fedora/fedora-bootc:45@sha256:8076cf4ff9d1fda1fcc759c021b8c317fe2b687ae51259e45917c95fed3308bc
+FROM quay.io/fedora/fedora-bootc:45@sha256:74f88b6d7c525663a9d179c20b1d6a199ca77b62ebbf2b7dd390f6bd4e874cfd
 
 # renovate: datasource=github-releases depName=ryanoasis/nerd-fonts
 ARG NERD_FONTS_VERSION=3.5.1
