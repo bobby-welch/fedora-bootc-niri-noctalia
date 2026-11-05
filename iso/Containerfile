@@ -1,6 +1,6 @@
 # Installer-only ISO (Anaconda). Same pinned base as ../Containerfile;
 # Renovate bumps both pins together.
-FROM quay.io/fedora/fedora-bootc:45@sha256:74f88b6d7c525663a9d179c20b1d6a199ca77b62ebbf2b7dd390f6bd4e874cfd
+FROM quay.io/fedora/fedora-bootc:45@sha256:c3cccbe8c7263cfc610ca9697cf4e0a34bb5b590b394f413f1c159ef63fb15ac
 
 # Anaconda plus the tools image-builder runs inside this container.
 RUN dnf5 install -y \
