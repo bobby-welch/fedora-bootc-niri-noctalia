@@ -79,6 +79,9 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
       git-lfs \
       gh \
       just \
+      jq \
+      tldr \
+      tmux \
       chezmoi \
       neovim \
       bat \
@@ -172,6 +175,9 @@ RUN systemctl enable \
       virtstoraged.socket \
       virtnodedevd.socket \
       virtsecretd.socket
+
+# Every user gets OpenSSH's agent; SSH_AUTH_SOCK comes from environment.d.
+RUN systemctl --global enable ssh-agent.socket
 
 # Laptop: no inbound SSH. Start sshd manually when needed.
 RUN systemctl disable sshd.service \

@@ -122,16 +122,7 @@ Only the **public** key (`.pub`) is uploaded; the private key never leaves the l
 
 ### SSH agent
 
-So you type the key's passphrase once per session:
-
-```bash
-systemctl --user enable --now ssh-agent.socket
-mkdir -p ~/.config/environment.d
-printf 'SSH_AUTH_SOCK=/run/user/%s/ssh-agent.socket\n' "$(id -u)" \
-  > ~/.config/environment.d/10-ssh-agent.conf
-```
-
-Add this to `~/.ssh/config`, then `chmod 600 ~/.ssh/config`:
+The image runs OpenSSH's agent for you, so you type the key's passphrase once per session. Add this to `~/.ssh/config`, then `chmod 600 ~/.ssh/config`:
 
 ```sshconfig
 Host github.com
@@ -141,7 +132,7 @@ Host github.com
     AddKeysToAgent yes
 ```
 
-Log out and back in, then check with `ssh -T git@github.com` and `ssh-add -l`.
+Check with `ssh -T git@github.com`; afterwards, `ssh-add -l` lists the key.
 
 ### 1Password
 
