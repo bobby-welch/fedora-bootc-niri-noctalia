@@ -19,7 +19,43 @@ env:
   FEDORA_VERSION: "45"
 
 jobs:
+  # Fedora deletes superseded base images from quay soon after publishing new
+  # ones; Renovate's digest bump (and its build) follows within hours. Scheduled
+  # runs skip while that bump is pending, and fail if it's overdue.
+  check:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    outputs:
+      skip: ${{ steps.base.outputs.skip }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Check base image
+        id: base
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          # skopeo refuses tag+digest references: check repo@digest
+          ref=$(sed -n 's/^FROM //p' Containerfile)
+          repo=${ref%@*}; repo=${repo%:*}
+          if [ "$EVENT" != schedule ] || skopeo inspect --raw "docker://${repo}@${ref#*@}" > /dev/null; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          days=$(( ($(date +%s) - $(git log -1 --format=%ct -- Containerfile)) / 86400 ))
+          if [ "$days" -ge 3 ]; then
+            echo "::error::Pinned base is gone and unchanged for ${days} days. Is Renovate running?"
+            exit 1
+          fi
+          echo "::notice::Pinned base superseded upstream; Renovate's bump will rebuild."
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: ubuntu-26.04
     permissions:
       contents: read
