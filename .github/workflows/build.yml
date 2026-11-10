@@ -106,7 +106,7 @@ jobs:
         run: |
           label=$(sudo podman inspect --format '{{ index .Labels "containers.bootc" }}' "localhost/${IMAGE_NAME}:final")
           test "$label" = 1 || { echo "containers.bootc label missing after rechunk" >&2; exit 1; }
-          sudo podman run --rm "localhost/${IMAGE_NAME}:final" bootc container lint
+          sudo podman run --rm "localhost/${IMAGE_NAME}:final" bootc container lint --fatal-warnings
 
       # Only main publishes; PRs and dispatches from other branches just build.
       - name: Log in to GHCR

@@ -244,7 +244,7 @@ The 3-day wait exists because compromised releases are usually discovered and pu
 ### What you do
 
 - **Glance at the Dependency Dashboard now and then:** issue #3, or `gh issue view 3 --web`. It lists everything pending or waiting.
-- **A dashboard that stops changing is the warning sign.** If Renovate stops running, nothing fails: the image just quietly stops getting Fedora updates. Its run logs are at [developer.mend.io](https://developer.mend.io).
+- **If Renovate stops, CI tells you.** Fedora publishes a new base image almost daily and deletes the old one. A scheduled run with the notice "Pinned base superseded" is normal: Renovate's bump is on its way and its merge rebuilds the image. If the pin hasn't moved for 3 days, the `check` job fails with "Is Renovate running?". Then look at the dashboard and Renovate's run logs at [developer.mend.io](https://developer.mend.io).
 - **Nerd Fonts PRs** fail the build until the checksum matches the new version. Fix it on the PR's branch:
 
   ```bash
@@ -254,6 +254,16 @@ The 3-day wait exists because compromised releases are usually discovered and pu
   sed -i "s/^ARG NERD_FONTS_SHA256=.*/ARG NERD_FONTS_SHA256=$sum/" Containerfile
   git commit -am "Nerd Fonts $v checksum" && git push
   ```
+
+## Virtual machines
+
+virt-manager, libvirt and QEMU are in the image, for trying installers and risky changes before they reach the laptop. Nothing runs until you use them: the libvirt services start on first connection.
+
+```bash
+virt-manager --connect qemu:///system     # asks for your password once
+```
+
+UEFI with Secure Boot, an emulated TPM and a NAT network (`virbr0`, 192.168.122.0/24) are available. Copy ISOs to `/var/lib/libvirt/images` first: QEMU isn't allowed to read files in your home directory.
 
 ## Building and testing locally
 
