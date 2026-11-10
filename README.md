@@ -149,11 +149,7 @@ Open 1Password from the launcher and sign in. In **Settings → Browser**, turn 
 
 ### Dotfiles
 
-Your real Niri, Noctalia and shell configuration comes from chezmoi:
-
-```bash
-chezmoi init --apply bobby-welch
-```
+Personal configuration will come from a new chezmoi repo, which is being built. Until then, the image's starter configs (Niri, Noctalia, shell) are in place; skip this step.
 
 ### Display scaling
 

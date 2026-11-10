@@ -169,7 +169,9 @@ RUN systemctl enable \
       flathub-setup.service \
       virtqemud.socket \
       virtnetworkd.socket \
-      virtstoraged.socket
+      virtstoraged.socket \
+      virtnodedevd.socket \
+      virtsecretd.socket
 
 # Laptop: no inbound SSH. Start sshd manually when needed.
 RUN systemctl disable sshd.service \
