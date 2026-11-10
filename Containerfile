@@ -180,6 +180,8 @@ RUN systemctl disable sshd.service \
 # A random seed must never ship: every install would start from the same one.
 # /run and /tmp are runtime-only: tmpfiles recreates their contents at boot.
 # Podman mounts .containerenv, secrets and run/systemd/resolve during builds.
+# authselect's checksum comes from nss-mdns's install script; the base image
+# has none, and authselect works without it.
 RUN find /run /tmp -mindepth 1 -maxdepth 1 \
       ! -name .containerenv ! -name secrets ! -name systemd -exec rm -rf {} + \
     && find /run/systemd -mindepth 1 -maxdepth 1 ! -name resolve -exec rm -rf {} + \
@@ -188,9 +190,10 @@ RUN find /run /tmp -mindepth 1 -maxdepth 1 \
       /var/cache/libX11 \
       /var/cache/libdnf5 \
       /var/cache/swcatalog \
+      /var/lib/authselect \
       /var/lib/dnf/repos \
     && rm -f /var/log/dnf5.log* \
           /var/lib/systemd/random-seed \
           /var/lib/systemd/catalog/database
 
-RUN bootc container lint
+RUN bootc container lint --fatal-warnings
