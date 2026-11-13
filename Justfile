@@ -12,7 +12,7 @@ lint: build
 shell: build
     sudo podman run --rm -it localhost/{{image}}:dev bash
 
-# Package names in the image (for diffing against ublue-os/base-main).
+# Package names in the image, one per line, sorted.
 # Build output goes to stderr so stdout is only the list.
 packages:
     {{just_executable()}} build >&2
@@ -34,7 +34,6 @@ iso:
     repo=ghcr.io/bobby-welch/{{image}}
     # Copy by digest, accepting only our signature: the same containers/image
     # check bootc applies on the installed system, so no cosign needed.
-    # Signatures are checked, then not stored: stored ones break the ISO copy.
     # Signatures are checked, then not stored: stored ones break the ISO copy.
     digest=$(skopeo inspect --format '{{{{.Digest}}' "docker://$repo:45")
     policy=$(mktemp); trap 'rm -f "$policy"' EXIT
