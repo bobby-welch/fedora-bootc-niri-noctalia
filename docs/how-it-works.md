@@ -57,7 +57,7 @@ recipe (Containerfile, in Git) ─► built and signed image (ghcr.io) ─► la
 | `iso/` | The installer recipe (section 7) |
 | `Justfile` | Shortcuts: `just build`, `just lint`, `just iso` and others |
 
-Configs go under `/usr/lib/…` where the program supports it: that location is read-only and always matches the image. Only programs that read `/etc` exclusively (the container policy, greetd) get files there.
+Configs go under `/usr/lib/…` where the program supports it: that location is read-only and always matches the image. `/etc` holds only what belongs there by convention or can live nowhere else: the container policy and signature lookup, greetd, the SSH hardening, the package repos, Niri's system config, and the starter configs in `/etc/skel` that new users get.
 
 ## 3. The factory: GitHub Actions
 
@@ -66,7 +66,7 @@ Configs go under `/usr/lib/…` where the program supports it: that location is 
 | Trigger | Result |
 | --- | --- |
 | Pull request to `main` | Build and lint only; nothing published |
-| Push to `main` (a merged PR) | Build, publish, sign |
+| Push to `main` (a merged PR) | Build, publish, sign; skipped when only Markdown files or `iso/` changed |
 | Daily schedule (05:17 UTC) | Rebuild to pick up package updates |
 | Manual (`workflow_dispatch`) | Run on demand |
 
@@ -227,7 +227,7 @@ The ISO is installer-only (Anaconda, Fedora's installer) and offline: the verifi
 3. **Assemble:** image-builder (`bootc-generic-iso`) makes a bootable ISO and embeds the verified image.
 4. **Output:** `iso/output/…/bootc-fedora-45-bootc-generic-iso-x86_64.iso`, with a built-in checksum (`checkisomd5`).
 
-It runs locally (10–20 minutes), not in CI.
+It runs locally (15–30 minutes), not in CI.
 
 ### `iso/` files
 

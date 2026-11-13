@@ -273,7 +273,7 @@ Anything that should exist on the installed system goes in `files/` (copied to `
 | Path | Purpose |
 | --- | --- |
 | `Containerfile` | The image: packages, hardware support, services, checks |
-| `files/` | System config: greetd login, Niri starter config, container signature policy, update and firewall settings |
+| `files/` | System config: greetd login, Niri and starter app configs, container signature policy, package repos, SSH, DNS, boot and update settings |
 | `build/` | Build-time checks and helpers |
 | `iso/` | The installer ISO: Anaconda environment, boot menu, kickstart |
 | `cosign.pub` | Public half of the signing key |
