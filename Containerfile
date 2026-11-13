@@ -77,6 +77,7 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
       git-core \
       git-delta \
       git-lfs \
+      gitleaks \
       gh \
       just \
       jq \
