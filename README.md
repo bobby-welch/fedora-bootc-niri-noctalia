@@ -22,6 +22,8 @@ Containerfile ──► GitHub Actions (daily) ──► signed image on ghcr.io
 - **bootc** (on the laptop): downloads updates, keeps the previous version for rollback.
 - **Renovate:** a bot that opens pull requests when something pinned has a new version. See [Renovate](#renovate).
 
+The full explanation, from the Containerfile to rollbacks, is in [docs/how-it-works.md](docs/how-it-works.md).
+
 ## Security
 
 - **Signed images.** CI signs every published image with a cosign key. The key lives only in a GitHub environment that just the `main` branch can use, so pull requests (including Renovate's) can never reach it.
