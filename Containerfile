@@ -79,7 +79,6 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
       git-lfs \
       betterleaks \
       ShellCheck \
-      shfmt \
       gh \
       just \
       jq \
