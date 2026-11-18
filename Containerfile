@@ -86,6 +86,10 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
       tmux \
       chezmoi \
       neovim \
+      gcc \
+      tree-sitter-cli \
+      nodejs \
+      nodejs-npm \
       bat \
       btop \
       eza \
