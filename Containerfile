@@ -133,7 +133,7 @@ RUN cat /tmp/build/1password-groups >> /usr/lib/group \
 RUN dnf5 --setopt=install_weak_deps=False install -y 1password \
     && dnf5 clean all
 
-# IosevkaTerm Nerd Font Mono: pinned release, verified checksum.
+# IosevkaTerm Nerd Font: pinned release, verified checksum.
 RUN set -eu; \
     archive=/tmp/IosevkaTerm.tar.xz; \
     fontdir=/usr/share/fonts/iosevka-term-nerd-font; \
@@ -142,10 +142,10 @@ RUN set -eu; \
     echo "${NERD_FONTS_SHA256}  ${archive}" | sha256sum --check; \
     mkdir -p "$fontdir"; \
     tar --no-same-owner -xJf "$archive" -C "$fontdir" \
-      IosevkaTermNerdFontMono-Regular.ttf \
-      IosevkaTermNerdFontMono-Bold.ttf \
-      IosevkaTermNerdFontMono-Italic.ttf \
-      IosevkaTermNerdFontMono-BoldItalic.ttf; \
+      IosevkaTermNerdFont-Regular.ttf \
+      IosevkaTermNerdFont-Bold.ttf \
+      IosevkaTermNerdFont-Italic.ttf \
+      IosevkaTermNerdFont-BoldItalic.ttf; \
     chmod 0644 "$fontdir"/*.ttf; \
     fc-cache -f "$fontdir"; \
     rm -f "$archive"
