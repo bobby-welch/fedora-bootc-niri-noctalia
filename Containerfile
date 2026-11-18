@@ -83,7 +83,6 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
       just \
       jq \
       tldr \
-      tmux \
       chezmoi \
       neovim \
       gcc \
