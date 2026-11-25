@@ -122,19 +122,11 @@ gh auth status && ssh -T git@github.com
 
 Only the **public** key (`.pub`) is uploaded; the private key never leaves the laptop.
 
+The first `ssh -T` asks you to trust GitHub's host key. Answer `yes` only if the ED25519 fingerprint is `SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU` ([GitHub's fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints)).
+
 ### SSH agent
 
-The image runs OpenSSH's agent for you, so you type the key's passphrase once per session. Add this to `~/.ssh/config`, then `chmod 600 ~/.ssh/config`:
-
-```sshconfig
-Host github.com
-    User git
-    IdentityFile ~/.ssh/id_ed25519
-    IdentitiesOnly yes
-    AddKeysToAgent yes
-```
-
-Check with `ssh -T git@github.com`; afterwards, `ssh-add -l` lists the key.
+The image runs OpenSSH's agent for you, so you type the key's passphrase once per session. The SSH config, with GitHub's host keys pinned, comes with the dotfiles below.
 
 ### 1Password
 
@@ -142,7 +134,13 @@ Open 1Password from the launcher and sign in. In **Settings → Browser**, turn 
 
 ### Dotfiles
 
-Personal configuration will come from a new chezmoi repo, which is being built. Until then, the image's starter configs (Niri, Noctalia, shell) are in place; skip this step.
+Personal configuration (Niri, Noctalia, Ghostty, shell, git, SSH) comes from a private chezmoi repo, cloned over SSH:
+
+```bash
+chezmoi init --apply git@github.com:bobby-welch/dotfiles.git
+```
+
+Its README covers the rest: checking the git hooks and setting up Dropbox.
 
 ### Display scaling
 
