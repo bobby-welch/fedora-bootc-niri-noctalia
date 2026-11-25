@@ -138,7 +138,7 @@ If any build fails, nothing merges and the published image stays on the last goo
 
 **Not pinned:** packages installed with `dnf` always come in at their latest version at build time. They're protected by mandatory GPG signature checks on every repository, and the daily builds are how their security fixes arrive.
 
-**Dependency Dashboard** (issue #3): open and pending updates, errors, everything Renovate watches. It refreshes on each Renovate run.
+**Dependency Dashboard** (issue #3): open and pending updates, errors, everything Renovate watches. It refreshes on each Renovate run. Its last checkbox asks Renovate to run now instead of on Mend's schedule.
 
 ### PRs that aren't auto-merged
 
@@ -267,6 +267,7 @@ The first update re-downloads some layers once: the ISO's local copy has its own
 | Nerd Fonts PR | Checksum needs updating | Section 5 |
 | Major Action PR | Not auto-merged by design | Read the notes, merge |
 | Scheduled run failed: "Is Renovate running?" | Base pin unchanged for 3 days | Dashboard and Mend logs |
+| Your PR fails: `manifest unknown` | Fedora deleted the pinned base before Renovate bumped it | Tick the last box in the Dashboard (`gh issue view 3 --web`); once its digest PR merges, `gh pr update-branch <n>` |
 
 **Changing the system:**
 
