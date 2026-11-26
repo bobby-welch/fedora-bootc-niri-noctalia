@@ -236,7 +236,8 @@ It runs locally (15–30 minutes), not in CI.
 | `iso/Containerfile` | Installer environment: permissive SELinux for the installer only, `/.buildstamp` (no pre-release warning), initramfs that boots into Anaconda |
 | `iso/iso.yaml` | Volume label and boot menu: normal and basic-graphics entries |
 | `iso/interactive-defaults.ks` | The kickstart (below) |
-| `iso/anaconda.conf` | Empty `preserved_arguments`: installer kernel arguments such as `nomodeset` don't reach the installed system. Hides the Network & Host Name screen: Anaconda's bootc source always asks for a network, which blocks installing on a machine without a network device |
+| `iso/anaconda.conf` | Empty `preserved_arguments`: installer kernel arguments such as `nomodeset` don't reach the installed system |
+| `iso/patch-anaconda-bootc.py` | Anaconda's bootc source always asks for a network, which blocks installing on a machine without a network device. The patch asks only for registry images, as Anaconda's `ostreecontainer` source does. The build fails if Anaconda's code changes or the patched code misbehaves (checked against our kickstart); drop it once upstream fixes this |
 
 ### Kickstart lines
 

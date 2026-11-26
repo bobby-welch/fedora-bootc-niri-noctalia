@@ -83,10 +83,9 @@ Back up the laptop first: the install erases the disk.
 
 1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**.
 2. **Installation Destination:** select the internal disk and tick **Encrypt my data**. Choose a strong passphrase; you type it at every boot.
-3. **User Creation:** create your user and tick **Make this user administrator**.
-4. **Begin Installation**, then reboot and remove the USB drive.
-
-The installer needs no network, so it has no Network & Host Name screen; set the hostname after the first boot.
+3. **Network & Host Name:** set the hostname (you can change it later). No network is needed, so "No network devices available" is fine.
+4. **User Creation:** create your user and tick **Make this user administrator**.
+5. **Begin Installation**, then reboot and remove the USB drive.
 
 ## First boot
 
@@ -105,7 +104,7 @@ After the reboot, `sudo bootc status` shows `signature: containerPolicy` under t
 
 ### Hostname
 
-The installer doesn't set one:
+If you didn't set one in the installer:
 
 ```bash
 sudo hostnamectl set-hostname my-laptop

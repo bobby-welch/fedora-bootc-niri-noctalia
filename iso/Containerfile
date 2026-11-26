@@ -27,6 +27,12 @@ COPY iso.yaml /usr/lib/image-builder/bootc/iso.yaml
 COPY interactive-defaults.ks /usr/share/anaconda/interactive-defaults.ks
 COPY anaconda.conf /etc/anaconda/conf.d/90-installer.conf
 
+# Anaconda's bootc source asks for a network even for this offline ISO, which
+# blocks installing on a machine with no network device. The script patches
+# it, then fails the build unless the patched code behaves as expected.
+COPY patch-anaconda-bootc.py /tmp/
+RUN python3 /tmp/patch-anaconda-bootc.py && rm /tmp/patch-anaconda-bootc.py
+
 # What lorax normally does: boot straight into Anaconda.
 RUN echo "install:x:0:0:root:/root:/usr/libexec/anaconda/run-anaconda" >> /etc/passwd \
     && echo "install::14438:0:99999:7:::" >> /etc/shadow \
