@@ -81,11 +81,12 @@ sudo dd if=iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bootc-fedora-45-b
 
 Back up the laptop first: the install erases the disk.
 
-1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black, reboot and choose **basic graphics**.
+1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**.
 2. **Installation Destination:** select the internal disk and tick **Encrypt my data**. Choose a strong passphrase; you type it at every boot.
-3. **Network & Host Name:** set the hostname (you can change it later).
-4. **User Creation:** create your user and tick **Make this user administrator**.
-5. **Begin Installation**, then reboot and remove the USB drive.
+3. **User Creation:** create your user and tick **Make this user administrator**.
+4. **Begin Installation**, then reboot and remove the USB drive.
+
+The installer needs no network, so it has no Network & Host Name screen; set the hostname after the first boot.
 
 ## First boot
 
@@ -104,7 +105,7 @@ After the reboot, `sudo bootc status` shows `signature: containerPolicy` under t
 
 ### Hostname
 
-If you didn't set one in the installer:
+The installer doesn't set one:
 
 ```bash
 sudo hostnamectl set-hostname my-laptop
@@ -286,5 +287,5 @@ Anything that should exist on the installed system goes in `files/` (copied to `
 - **Niri is stuck or the screen is unusable:** `Ctrl+Alt+Delete` quits Niri back to the login screen, after a confirmation. It works even if Noctalia is frozen.
 - **An X11-only app won't start:** Xwayland is off on purpose. Re-enable it in the Niri config only if you need that app.
 - **`bootc upgrade` reports a signature error:** don't override it. Check `cosign verify` (see [Security](#security)) and the latest run in GitHub Actions; a failed or unsigned build should never be installed.
-- **Installer screen stays black:** use the **basic graphics** boot entry.
+- **Installer screen stays black, or shows "Pane is dead (signal 11)":** use the **basic graphics** boot entry. Its `nomodeset` stays in the installer; the installed system uses the normal graphics driver.
 - **"Failed to start systemd-cryptsetup@… Unit … not found" next to the disk passphrase prompt:** harmless. Two parts of the boot process both try to start the disk unlock; the one asking for your passphrase is the one that works.
