@@ -126,9 +126,10 @@ RUN dnf5 --setopt=install_weak_deps=False install -y brave-origin \
     && dnf5 clean all
 
 # 1Password's setgid helpers need stable GIDs, present before the RPM installs.
+# Not system GIDs: the app rejects helpers whose group is below 1000.
 RUN cat /tmp/build/1password-groups >> /usr/lib/group \
-    && test "$(getent group onepassword | cut -d: -f3)" = 950 \
-    && test "$(getent group onepassword-mcp | cut -d: -f3)" = 951
+    && test "$(getent group onepassword | cut -d: -f3)" = 1500 \
+    && test "$(getent group onepassword-mcp | cut -d: -f3)" = 1501
 
 RUN dnf5 --setopt=install_weak_deps=False install -y 1password \
     && dnf5 clean all
@@ -154,8 +155,8 @@ RUN set -eu; \
 COPY files/ /
 COPY cosign.pub /etc/pki/containers/fedora-bootc-niri-noctalia.pub
 
-RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 950:2755 \
-    && test "$(stat -c '%g:%a' /opt/1Password/1password-mcp)" = 951:2755 \
+RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 1500:2755 \
+    && test "$(stat -c '%g:%a' /opt/1Password/1password-mcp)" = 1501:2755 \
     && grep -qx 'gpgcheck=1' /etc/yum.repos.d/1password.repo \
     && grep -qx 'repo_gpgcheck=1' /etc/yum.repos.d/1password.repo \
     && /tmp/build/check-repo-gpgcheck.sh \
