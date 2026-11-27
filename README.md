@@ -187,6 +187,19 @@ Flathub is added automatically on the first boot with a network connection:
 flatpak install flathub <app-id>
 ```
 
+### Printing
+
+Network printers that support AirPrint or IPP Everywhere print without a driver (the Brother HL-L2340DW does). List the printers CUPS finds, add yours as a queue, make it the default and print a test page:
+
+```bash
+lpinfo --include-schemes dnssd -v      # e.g. dnssd://Brother%20HL-L2340D%20series._ipp._tcp.local/?uuid=…
+sudo lpadmin -p <name> -D "<description>" -E -v '<dnssd address>' -m everywhere
+sudo lpadmin -d <name>
+lp /usr/share/cups/data/testprint
+```
+
+The `dnssd://` address finds the printer by name, so the queue keeps working when the printer's IP address changes. Remove a queue with `sudo lpadmin -x <name>`.
+
 ## Updates and rollback
 
 A daily timer downloads the newest image and **stages** it; nothing changes until you reboot.
