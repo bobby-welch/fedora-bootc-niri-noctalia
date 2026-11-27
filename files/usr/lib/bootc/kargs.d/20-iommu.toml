@@ -1,0 +1,4 @@
+# Turn on the Intel IOMMU, which Fedora's kernel leaves off: devices on
+# Thunderbolt/USB4 ports can then only reach the memory they're given.
+kargs = ["intel_iommu=on"]
+match-architectures = ["x86_64"]
