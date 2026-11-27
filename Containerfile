@@ -15,6 +15,7 @@ COPY build/ /tmp/build/
 COPY files/etc/yum.repos.d/ /etc/yum.repos.d/
 
 # Hardware enablement. Weak deps allowed so firmware pulls in vendor subpackages.
+# cups-filters is explicit: driverless (IPP Everywhere) printing needs it.
 RUN dnf5 install -y \
       linux-firmware \
       alsa-sof-firmware \
@@ -36,6 +37,7 @@ RUN dnf5 install -y \
       zram-generator-defaults \
       firewalld \
       cups \
+      cups-filters \
     && dnf5 clean all
 
 # Desktop, applications, and CLI tools.
