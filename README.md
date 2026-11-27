@@ -150,7 +150,15 @@ The image runs OpenSSH's agent for you, so you type the key's passphrase once pe
 
 ### 1Password
 
-Open 1Password from the launcher and sign in. In **Settings → Browser**, turn on browser integration, then install the 1Password extension in Brave.
+Open 1Password from the launcher and sign in. In **Settings → Browser**, turn on browser integration, then install the 1Password extension in Brave. The extension should unlock through the app without its own sign-in.
+
+Check that they're connected: lock the app (`Ctrl+Shift+L`) and the extension locks too. If the extension asks for its own sign-in or stays unlocked, the app has refused it; the reason is in its log:
+
+```bash
+grep -iE 'invalid group|Extension connect' ~/.config/1Password/logs/1Password_rCURRENT.log | tail -n 4
+```
+
+`invalid group attempted to connect` means the helper's group isn't one the app trusts; the image keeps the 1Password groups at GIDs 1500 and 1501 for this (the app rejects groups below 1000).
 
 ### Dotfiles
 
