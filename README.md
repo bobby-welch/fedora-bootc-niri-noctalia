@@ -78,12 +78,21 @@ sudo umount /dev/sdX?* 2>/dev/null
 sudo dd if=iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bootc-fedora-45-bootc-generic-iso-x86_64.iso of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
+Optionally check the ISO before writing (`checkisomd5` isn't in the image, so it runs in a container; it prints its result on stderr) and compare the drive with it afterwards:
+
+```bash
+podman run --rm -v "$PWD/iso/output/bootc-fedora-45-bootc-generic-iso-x86_64:/iso:ro,z" registry.fedoraproject.org/fedora:45 \
+  sh -c 'dnf -yq install isomd5sum && checkisomd5 /iso/bootc-fedora-45-bootc-generic-iso-x86_64.iso 2>&1' | grep 'result is: PASS'
+sudo cmp -n "$(stat -c %s iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bootc-fedora-45-bootc-generic-iso-x86_64.iso)" \
+  iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bootc-fedora-45-bootc-generic-iso-x86_64.iso /dev/sdX && echo "USB matches ISO"
+```
+
 ### 3. Install
 
 Back up the laptop first: the install erases the disk.
 
 1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**.
-2. **Installation Destination:** select the internal disk and tick **Encrypt my data**. Choose a strong passphrase; you type it at every boot.
+2. **Installation Destination:** select only the internal disk (not the USB drive) and tick **Encrypt my data**. If the disk holds an old system, choose **Reclaim space → Delete all**. Choose a strong passphrase; you type it at every boot.
 3. **Network & Host Name:** set the hostname (you can change it later). No network is needed, so "No network devices available" is fine.
 4. **User Creation:** create your user and tick **Make this user administrator**.
 5. **Begin Installation**, then reboot and remove the USB drive.
@@ -94,14 +103,14 @@ Log in at the text login screen; Niri starts. `Mod` is the Super (Windows) key.
 
 ### Turn on signature enforcement
 
-The installer can't do this step, so do it once:
+The installer can't do this step, so do it once. It fetches the signature from ghcr.io, so connect to Wi-Fi first (Noctalia's Wi-Fi panel, or `nmcli device wifi connect "<SSID>" --ask`).
 
 ```bash
 sudo bootc switch --enforce-container-sigpolicy ghcr.io/bobby-welch/fedora-bootc-niri-noctalia:45
 systemctl reboot
 ```
 
-After the reboot, `sudo bootc status` shows `signature: containerPolicy` under the image: every update is now checked against the signing key.
+After the reboot, `sudo bootc status` shows `signature: containerPolicy` under the image: every update is now checked against the signing key. `No changes in …` from the switch is normal when the installer's image is still the newest. bootc commands may print `mount: (hint) your fstab has been modified…`: harmless, `bootc-fstab-edit.service` adds `ro` for `/` to `/etc/fstab` at boot.
 
 ### Hostname
 
@@ -123,11 +132,21 @@ gh auth status && ssh -T git@github.com
 
 Only the **public** key (`.pub`) is uploaded; the private key never leaves the laptop.
 
+Upload the same key again as a **signing** key, or your commits won't show as Verified on GitHub (signing keys need one extra token scope):
+
+```bash
+gh auth refresh -h github.com -s admin:ssh_signing_key
+gh ssh-key add ~/.ssh/id_ed25519.pub --type signing --title my-laptop
+gh ssh-key list          # the new key, once for authentication and once for signing
+```
+
+Reinstalling? Delete the old installation's keys (both types) under GitHub's **Settings → SSH and GPG keys** once a commit from the new key shows as Verified.
+
 The first `ssh -T` asks you to trust GitHub's host key. Answer `yes` only if the ED25519 fingerprint is `SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU` ([GitHub's fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints)).
 
 ### SSH agent
 
-The image runs OpenSSH's agent for you, so you type the key's passphrase once per session. The SSH config, with GitHub's host keys pinned, comes with the dotfiles below.
+The image runs OpenSSH's agent for you, so you type the key's passphrase once per session. The SSH config, with GitHub's host keys pinned, comes with the dotfiles below; until then, run `ssh-add` once so the agent holds the passphrase.
 
 ### 1Password
 
