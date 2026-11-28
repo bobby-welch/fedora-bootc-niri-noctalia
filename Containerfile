@@ -180,7 +180,7 @@ RUN set -eu; \
     kver=$(ls /usr/lib/modules); \
     test "$(echo "$kver" | wc -w)" = 1; \
     img="/usr/lib/modules/$kver/initramfs.img"; \
-    lsinitrd --mod "$img" | sort > /tmp/modules.base; \
+    lsinitrd -f usr/lib/dracut/modules.txt "$img" | sort > /tmp/modules.base; \
     test -s /tmp/modules.base; \
     mkdir /var/roothome; \
     mkdir -p /etc/dracut.conf.d; \
@@ -191,7 +191,7 @@ RUN set -eu; \
     rmdir --ignore-fail-on-non-empty /etc/dracut.conf.d; \
     rmdir /var/roothome; \
     if grep -E 'dracut\[E\]|ERROR' /tmp/dracut.log; then exit 1; fi; \
-    lsinitrd --mod "$img" | sort > /tmp/modules.new; \
+    lsinitrd -f usr/lib/dracut/modules.txt "$img" | sort > /tmp/modules.new; \
     missing=$(comm -23 /tmp/modules.base /tmp/modules.new); \
     if [ -n "$missing" ]; then echo "dracut modules lost: $missing"; exit 1; fi; \
     lsinitrd "$img" > /tmp/initramfs.lst; \
