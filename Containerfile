@@ -172,17 +172,24 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 1500:275
 
 # Rebuild the initramfs to pick up our dracut drop-ins (Intel graphics drivers),
 # then check it has the drivers and the console font from kargs.d.
+# /root links to /var/roothome, which only exists on a booted system: create it
+# for the run. No syslog in a build container, so don't ask dracut to use it.
+# Any dracut error fails the build.
 RUN set -eu; \
     kver=$(ls /usr/lib/modules); \
     test "$(echo "$kver" | wc -w)" = 1; \
     img="/usr/lib/modules/$kver/initramfs.img"; \
-    dracut --force --kver "$kver" "$img"; \
+    mkdir /var/roothome; \
+    dracut --force --sysloglvl 0 --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
+      || { cat /tmp/dracut.log; exit 1; }; \
+    rmdir /var/roothome; \
+    if grep -E 'dracut\[E\]|ERROR' /tmp/dracut.log; then exit 1; fi; \
     lsinitrd "$img" > /tmp/initramfs.lst; \
     grep -q '/drm/xe/xe\.ko' /tmp/initramfs.lst; \
     grep -q '/drm/i915/i915\.ko' /tmp/initramfs.lst; \
     grep -q 'consolefonts/latarcyrheb-sun32' /tmp/initramfs.lst; \
     echo "initramfs: $(du -h "$img" | cut -f1)"; \
-    rm /tmp/initramfs.lst
+    rm /tmp/initramfs.lst /tmp/dracut.log
 
 # niri-session still calls import-environment without names; systemd 262 only
 # warns. Recheck if the session loses its environment after a systemd update.
