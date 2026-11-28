@@ -33,7 +33,7 @@ recipe (Containerfile, in Git) ─► built and signed image (ghcr.io) ─► la
 
 1. **Base:** Fedora's bootc image, pinned by digest.
 2. **Repositories:** vendor repos, with signature checking on.
-3. **Hardware:** XPS 13 firmware and drivers, audio, video acceleration, power management, printing (CUPS with its driverless filters).
+3. **Hardware:** laptop firmware and drivers, audio, video acceleration, power management, Thunderbolt authorization (bolt), fingerprint readers (fprintd), printing (CUPS with its driverless filters).
 4. **Desktop and CLI:** Niri, Noctalia, greetd, portals, and command-line tools. Weak dependencies off.
 5. **Virtualization:** libvirt, QEMU, virt-manager.
 6. **COPRs:** Ghostty, Starship, Lazygit. Single-maintainer repos, the most fragile part.

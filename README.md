@@ -30,7 +30,7 @@ The full explanation, from the Containerfile to rollbacks, is in [docs/how-it-wo
 - **Enforced on the laptop.** The image's container policy rejects images by default and accepts this one only with a valid signature from our key. After install you turn on bootc's enforcement (see [First boot](#first-boot)).
 - **Verified installer.** `just iso` checks the same signature before embedding the image in the ISO.
 - **Locked-down defaults.** SSH server off and closed in the firewall (key-only config if you ever start it), Xwayland off, every package repository must have GPG checks on (the build fails otherwise).
-- **DMA protection.** The image turns on the Intel IOMMU (`intel_iommu=on`; Fedora's kernel leaves it off), so devices on Thunderbolt/USB4 ports can only reach the memory they're given. `fwupdmgr security` shows `IOMMU: Enabled`.
+- **DMA protection.** The image turns on the Intel IOMMU (`intel_iommu=on`; Fedora's kernel leaves it off), so devices on Thunderbolt/USB4 ports can only reach the memory they're given. `fwupdmgr security` shows `IOMMU: Enabled`. With it on, `bolt` authorizes Thunderbolt devices (docks, drives) automatically; `boltctl list` shows them.
 - **No surprise reboots.** Updates are downloaded and staged automatically, but only apply when you reboot.
 
 Verify any published image yourself, from a checkout of this repo (needs [cosign](https://docs.sigstore.dev/cosign/system_config/installation/)):
@@ -91,7 +91,7 @@ sudo cmp -n "$(stat -c %s iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bo
 
 Back up the laptop first: the install erases the disk.
 
-1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**. Leave Secure Boot on: the installer and the installed system boot with it.
+1. Boot from the USB drive (on a Dell or ThinkPad, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**. Leave Secure Boot on: the installer and the installed system boot with it. On a ThinkPad, first turn on **Security → Secure Boot → Allow Microsoft 3rd Party UEFI CA** in the firmware setup (F1 at the logo): it's off by default on recent models, and without it the USB drive won't boot with Secure Boot on.
 2. **Installation Destination:** select only the internal disk (not the USB drive) and tick **Encrypt my data**. If the disk holds an old system, choose **Reclaim space → Delete all**. Choose a strong passphrase; you type it at every boot.
 3. **Network & Host Name:** set the hostname (you can change it later). No network is needed, so "No network devices available" is fine.
 4. **User Creation:** create your user and tick **Make this user administrator**.
@@ -186,6 +186,17 @@ niri msg output eDP-1 scale 1.6     # try a scale for this session
 ```
 
 To keep it, set `scale` in the matching `output` block of `~/.config/niri/config.kdl`.
+
+### Fingerprint
+
+On laptops with a supported reader (`lsusb` lists it; most ThinkPads use Synaptics, `06cb:…`), enroll a finger and test it:
+
+```bash
+fprintd-enroll          # touch the sensor until it says enroll-completed
+fprintd-verify          # verify-match
+```
+
+Noctalia's lock screen then accepts the finger or the password (`fingerprint = true` under `[lockscreen]` in its config). The login screen and `sudo` still ask for the password: logging in needs it to unlock the keyring. If enrolling fails on a reader that was used with Windows, clear it in the firmware setup (on a ThinkPad: **Security → Fingerprint → Reset Fingerprint Data**).
 
 ### Flatpak apps
 
