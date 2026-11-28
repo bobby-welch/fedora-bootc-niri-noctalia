@@ -101,6 +101,8 @@ Back up the laptop first: the install erases the disk.
 
 Log in at the text login screen; Niri starts. `Mod` is the Super (Windows) key.
 
+The disk passphrase prompt and this login use a large console font (`latarcyrheb-sun32`, 16×32), set by the image's `vconsole.font` kernel argument. The initramfs includes the Intel graphics drivers, so the prompt also shows on an external monitor.
+
 ### Turn on signature enforcement
 
 The installer can't do this step, so do it once. It fetches the signature from ghcr.io, so connect to Wi-Fi first (Noctalia's Wi-Fi panel, or `nmcli device wifi connect "<SSID>" --ask`).

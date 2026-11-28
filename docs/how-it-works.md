@@ -40,10 +40,11 @@ recipe (Containerfile, in Git) ─► built and signed image (ghcr.io) ─► la
 7. **Vendor apps:** Brave, 1Password.
 8. **Font:** Nerd Font at a pinned version, checked against its SHA-256.
 9. **Configuration:** `files/` copied to `/`, plus the public signing key.
-10. **Checks:** the build fails if a repo lacks GPG checking, 1Password's permissions are wrong, the container policy doesn't reject by default, or the Niri config is invalid.
-11. **Services:** enable what should run (greetd, firewalld, thermald, libvirt sockets, the SSH agent); disable sshd.
-12. **Cleanup:** caches, build helpers, `/run` and `/tmp` leftovers, the random seed, authselect's build-time checksum.
-13. **Lint:** `bootc container lint --fatal-warnings`. Any warning fails the build.
+10. **Initramfs:** rebuilt with dracut so it includes the Intel graphics drivers (`xe`, `i915`; Fedora's bootc image leaves them out). The build fails if the drivers or the console font are missing.
+11. **Checks:** the build fails if a repo lacks GPG checking, 1Password's permissions are wrong, the container policy doesn't reject by default, or the Niri config is invalid.
+12. **Services:** enable what should run (greetd, firewalld, thermald, libvirt sockets, the SSH agent); disable sshd.
+13. **Cleanup:** caches, build helpers, `/run` and `/tmp` leftovers, the random seed, authselect's build-time checksum.
+14. **Lint:** `bootc container lint --fatal-warnings`. Any warning fails the build.
 
 ### Supporting files
 
