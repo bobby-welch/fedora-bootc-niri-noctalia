@@ -30,6 +30,7 @@ The full explanation, from the Containerfile to rollbacks, is in [docs/how-it-wo
 - **Enforced on the laptop.** The image's container policy rejects images by default and accepts this one only with a valid signature from our key. After install you turn on bootc's enforcement (see [First boot](#first-boot)).
 - **Verified installer.** `just iso` checks the same signature before embedding the image in the ISO.
 - **Locked-down defaults.** SSH server off and closed in the firewall (key-only config if you ever start it), Xwayland off, every package repository must have GPG checks on (the build fails otherwise).
+- **DMA protection.** The image turns on the Intel IOMMU (`intel_iommu=on`; Fedora's kernel leaves it off), so devices on Thunderbolt/USB4 ports can only reach the memory they're given. `fwupdmgr security` shows `IOMMU: Enabled`.
 - **No surprise reboots.** Updates are downloaded and staged automatically, but only apply when you reboot.
 
 Verify any published image yourself, from a checkout of this repo (needs [cosign](https://docs.sigstore.dev/cosign/system_config/installation/)):
