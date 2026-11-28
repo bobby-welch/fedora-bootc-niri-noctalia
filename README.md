@@ -7,7 +7,7 @@ My personal laptop OS: [Niri](https://github.com/YaLTeR/niri) and [Noctalia](htt
 The whole system is one container image, built daily by GitHub Actions. A laptop downloads new versions in the background and switches to them on the next reboot; if something breaks, the previous version is one command away.
 
 - **Image:** `ghcr.io/bobby-welch/fedora-bootc-niri-noctalia:45`
-- **Tested on:** Dell XPS 13 (Intel Wildcat Lake)
+- **Tested on:** Dell XPS 13 DX13260 (Intel Core 5 320, Wildcat Lake), with Secure Boot on
 
 ## How it works
 
@@ -78,12 +78,21 @@ sudo umount /dev/sdX?* 2>/dev/null
 sudo dd if=iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bootc-fedora-45-bootc-generic-iso-x86_64.iso of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
+Optionally check the ISO before writing (`checkisomd5` isn't in the image, so it runs in a container; it prints its result on stderr) and compare the drive with it afterwards:
+
+```bash
+podman run --rm -v "$PWD/iso/output/bootc-fedora-45-bootc-generic-iso-x86_64:/iso:ro,z" registry.fedoraproject.org/fedora:45 \
+  sh -c 'dnf -yq install isomd5sum && checkisomd5 /iso/bootc-fedora-45-bootc-generic-iso-x86_64.iso 2>&1' | grep 'result is: PASS'
+sudo cmp -n "$(stat -c %s iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bootc-fedora-45-bootc-generic-iso-x86_64.iso)" \
+  iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bootc-fedora-45-bootc-generic-iso-x86_64.iso /dev/sdX && echo "USB matches ISO"
+```
+
 ### 3. Install
 
 Back up the laptop first: the install erases the disk.
 
-1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**.
-2. **Installation Destination:** select the internal disk and tick **Encrypt my data**. Choose a strong passphrase; you type it at every boot.
+1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**. Leave Secure Boot on: the installer and the installed system boot with it.
+2. **Installation Destination:** select only the internal disk (not the USB drive) and tick **Encrypt my data**. If the disk holds an old system, choose **Reclaim space → Delete all**. Choose a strong passphrase; you type it at every boot.
 3. **Network & Host Name:** set the hostname (you can change it later). No network is needed, so "No network devices available" is fine.
 4. **User Creation:** create your user and tick **Make this user administrator**.
 5. **Begin Installation**, then reboot and remove the USB drive.
@@ -94,14 +103,22 @@ Log in at the text login screen; Niri starts. `Mod` is the Super (Windows) key.
 
 ### Turn on signature enforcement
 
-The installer can't do this step, so do it once:
+The installer can't do this step, so do it once. It fetches the signature from ghcr.io, so connect to Wi-Fi first (Noctalia's Wi-Fi panel, or `nmcli device wifi connect "<SSID>" --ask`).
 
 ```bash
 sudo bootc switch --enforce-container-sigpolicy ghcr.io/bobby-welch/fedora-bootc-niri-noctalia:45
 systemctl reboot
 ```
 
-After the reboot, `sudo bootc status` shows `signature: containerPolicy` under the image: every update is now checked against the signing key.
+After the reboot, `sudo bootc status` shows `signature: containerPolicy` under the image: every update is now checked against the signing key. `No changes in …` from the switch is normal when the installer's image is still the newest.
+
+### Check Secure Boot
+
+```bash
+mokutil --sb-state      # SecureBoot enabled
+```
+
+If it says disabled, turn it on in the firmware setup: `systemctl reboot --firmware-setup` opens it directly. On the XPS 13 it's under **Security → Secure Boot**. With Secure Boot on, the kernel also runs in lockdown mode.
 
 ### Hostname
 
@@ -123,15 +140,33 @@ gh auth status && ssh -T git@github.com
 
 Only the **public** key (`.pub`) is uploaded; the private key never leaves the laptop.
 
+Upload the same key again as a **signing** key, or your commits won't show as Verified on GitHub (signing keys need one extra token scope):
+
+```bash
+gh auth refresh -h github.com -s admin:ssh_signing_key
+gh ssh-key add ~/.ssh/id_ed25519.pub --type signing --title my-laptop
+gh ssh-key list          # the new key, once for authentication and once for signing
+```
+
+Reinstalling? Delete the old installation's keys (both types) under GitHub's **Settings → SSH and GPG keys** once a commit from the new key shows as Verified.
+
 The first `ssh -T` asks you to trust GitHub's host key. Answer `yes` only if the ED25519 fingerprint is `SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU` ([GitHub's fingerprints](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints)).
 
 ### SSH agent
 
-The image runs OpenSSH's agent for you, so you type the key's passphrase once per session. The SSH config, with GitHub's host keys pinned, comes with the dotfiles below.
+The image runs OpenSSH's agent for you, so you type the key's passphrase once per session. The SSH config, with GitHub's host keys pinned, comes with the dotfiles below; until then, run `ssh-add` once so the agent holds the passphrase.
 
 ### 1Password
 
-Open 1Password from the launcher and sign in. In **Settings → Browser**, turn on browser integration, then install the 1Password extension in Brave.
+Open 1Password from the launcher and sign in. In **Settings → Browser**, turn on browser integration, then install the 1Password extension in Brave. The extension should unlock through the app without its own sign-in.
+
+Check that they're connected: lock the app (`Ctrl+Shift+L`) and the extension locks too. If the extension asks for its own sign-in or stays unlocked, the app has refused it; the reason is in its log:
+
+```bash
+grep -iE 'invalid group|Extension connect' ~/.config/1Password/logs/1Password_rCURRENT.log | tail -n 4
+```
+
+`invalid group attempted to connect` means the helper's group isn't one the app trusts; the image keeps the 1Password groups at GIDs 1500 and 1501 for this (the app rejects groups below 1000).
 
 ### Dotfiles
 
@@ -160,6 +195,19 @@ Flathub is added automatically on the first boot with a network connection:
 flatpak install flathub <app-id>
 ```
 
+### Printing
+
+Network printers that support AirPrint or IPP Everywhere print without a driver (the Brother HL-L2340DW does). List the printers CUPS finds, add yours as a queue, make it the default and print a test page:
+
+```bash
+lpinfo --include-schemes dnssd -v      # e.g. dnssd://Brother%20HL-L2340D%20series._ipp._tcp.local/?uuid=…
+sudo lpadmin -p <name> -D "<description>" -E -v '<dnssd address>' -m everywhere
+sudo lpadmin -d <name>
+lp /usr/share/cups/data/testprint
+```
+
+The `dnssd://` address finds the printer by name, so the queue keeps working when the printer's IP address changes. Remove a queue with `sudo lpadmin -x <name>`.
+
 ## Updates and rollback
 
 A daily timer downloads the newest image and **stages** it; nothing changes until you reboot.
@@ -187,6 +235,7 @@ Dell publishes firmware through LVFS; `fwupd` is in the image:
 fwupdmgr refresh
 fwupdmgr get-updates
 fwupdmgr update          # plug in the charger first
+fwupdmgr security        # the platform's security checks (HSI)
 ```
 
 ### Moving to a new Fedora release
@@ -282,7 +331,7 @@ Anything that should exist on the installed system goes in `files/` (copied to `
 
 ## Troubleshooting
 
-- **The laptop won't boot after an update:** `bootc rollback` needs a running system, so use the boot menu instead. It's hidden by default: hold **Shift** (or tap **Esc**) right after the Dell logo, pick the second entry (the previous version), log in, then run `sudo bootc rollback` to make it the default again.
+- **The laptop won't boot after an update:** `bootc rollback` needs a running system, so use the boot menu instead. It shows for only one second: tap an arrow key as soon as the Dell logo goes away, which stops the countdown, then pick the second entry (the previous version), log in, and run `sudo bootc rollback` to make it the default again.
 - **No sound:** check `wpctl status` lists the speakers. This laptop's audio needs `alsa-ucm`, which is in the image; a missing device after an update is worth a rollback.
 - **Video stutters or drains the battery:** run `vainfo`. It should name the `Intel iHD driver` and list `VAProfileAV1Profile0` and `VAProfileVP9Profile0`; an error means videos are decoded on the CPU. Fedora's build of the driver leaves out H.264 and HEVC, so those always decode on the CPU.
 - **Niri is stuck or the screen is unusable:** `Ctrl+Alt+Delete` quits Niri back to the login screen, after a confirmation. It works even if Noctalia is frozen.
