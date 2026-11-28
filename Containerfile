@@ -16,6 +16,9 @@ COPY files/etc/yum.repos.d/ /etc/yum.repos.d/
 
 # Hardware enablement. Weak deps allowed so firmware pulls in vendor subpackages.
 # cups-filters is explicit: driverless (IPP Everywhere) printing needs it.
+# bolt authorizes Thunderbolt/USB4 devices (automatically with the IOMMU on);
+# fprintd drives fingerprint readers (Noctalia's lock screen uses it over D-Bus).
+# Both start on demand, so nothing runs on laptops without the hardware.
 RUN dnf5 install -y \
       linux-firmware \
       alsa-sof-firmware \
@@ -32,6 +35,8 @@ RUN dnf5 install -y \
       upower \
       thermald \
       intel-lpmd \
+      bolt \
+      fprintd \
       bluez \
       NetworkManager-wifi \
       NetworkManager-bluetooth \
