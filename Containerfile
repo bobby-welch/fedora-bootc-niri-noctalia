@@ -19,6 +19,7 @@ COPY files/etc/yum.repos.d/ /etc/yum.repos.d/
 # bolt authorizes Thunderbolt/USB4 devices (automatically with the IOMMU on);
 # fprintd drives fingerprint readers (Noctalia's lock screen uses it over D-Bus).
 # Both start on demand, so nothing runs on laptops without the hardware.
+# pciutils (lspci) for hardware checks; it used to arrive only as a weak dep.
 RUN dnf5 install -y \
       linux-firmware \
       alsa-sof-firmware \
@@ -31,6 +32,7 @@ RUN dnf5 install -y \
       mesa-vulkan-drivers \
       libva-intel-media-driver \
       libva-utils \
+      pciutils \
       fwupd \
       upower \
       thermald \
@@ -118,11 +120,13 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
 # RBD, LVM...), and iSCSI's NetworkManager hook made the login wait for
 # Wi-Fi. Weak deps off, so virt-manager doesn't pull the bundle back; kept
 # from them: SELinux policy for the TPM emulator and user-mode networking,
-# and PipeWire's JACK library (instead of JACK2) for QEMU's audio.
+# virt-manager's XML editor, and PipeWire's JACK library (instead of JACK2)
+# for QEMU's audio.
 RUN dnf5 --setopt=install_weak_deps=False install -y \
       virt-manager \
       virt-install \
       virt-viewer \
+      gtksourceview4 \
       libvirt-daemon-driver-qemu \
       libvirt-daemon-driver-network \
       libvirt-daemon-driver-storage-core \
@@ -227,9 +231,6 @@ RUN set -eu; \
 # niri-session still calls import-environment without names; systemd 262 only
 # warns. Recheck if the session loses its environment after a systemd update.
 RUN niri validate --config /etc/niri/config.kdl
-
-# TEMPORARY: package list to compare with the current image (remove before merge).
-RUN rpm -qa --qf 'pkg: %{NAME}\n' | sort
 
 # Explicit, so the image doesn't depend on Fedora's presets.
 RUN systemctl enable \
