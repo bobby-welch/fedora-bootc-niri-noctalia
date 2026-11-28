@@ -284,6 +284,7 @@ Anything that should exist on the installed system goes in `files/` (copied to `
 
 - **The laptop won't boot after an update:** `bootc rollback` needs a running system, so use the boot menu instead. It's hidden by default: hold **Shift** (or tap **Esc**) right after the Dell logo, pick the second entry (the previous version), log in, then run `sudo bootc rollback` to make it the default again.
 - **No sound:** check `wpctl status` lists the speakers. This laptop's audio needs `alsa-ucm`, which is in the image; a missing device after an update is worth a rollback.
+- **Video stutters or drains the battery:** run `vainfo`. It should name the `Intel iHD driver` and list `VAProfileAV1Profile0` and `VAProfileVP9Profile0`; an error means videos are decoded on the CPU. Fedora's build of the driver leaves out H.264 and HEVC, so those always decode on the CPU.
 - **Niri is stuck or the screen is unusable:** `Ctrl+Alt+Delete` quits Niri back to the login screen, after a confirmation. It works even if Noctalia is frozen.
 - **An X11-only app won't start:** Xwayland is off on purpose. Re-enable it in the Niri config only if you need that app.
 - **`bootc upgrade` reports a signature error:** don't override it. Check `cosign verify` (see [Security](#security)) and the latest run in GitHub Actions; a failed or unsigned build should never be installed.
