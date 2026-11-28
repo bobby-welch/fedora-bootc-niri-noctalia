@@ -192,6 +192,11 @@ RUN systemctl disable sshd.service \
     && firewall-offline-cmd --remove-service=ssh \
     && echo "Firewall zone $(firewall-offline-cmd --get-default-zone) allows: $(firewall-offline-cmd --list-services)"
 
+# The base image's tmpfiles config (rpm-ostree-0-integration-opt-usrlocal.conf)
+# lists /usr/local/sbin, which the image lacks; on the read-only /usr it would
+# fail at every boot, so ship the empty directory.
+RUN mkdir -p /usr/local/sbin
+
 # Remove build helpers, caches, and repo metadata; keep service state in /var/lib.
 # A random seed must never ship: every install would start from the same one.
 # /run and /tmp are runtime-only: tmpfiles recreates their contents at boot.

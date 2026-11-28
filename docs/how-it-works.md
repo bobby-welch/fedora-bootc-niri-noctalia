@@ -247,6 +247,7 @@ It runs locally (15–30 minutes), not in CI.
 | `firewall --use-system-defaults` | Otherwise Anaconda re-opens SSH |
 | `%post`: `setfiles …` | Fixes SELinux labels on files Anaconda writes (`restorecon` is a no-op there) |
 | `%post`: drop `/` from `/etc/fstab` | Anaconda's line breaks `systemd-remount-fs` |
+| `%post`: add bootc's `Updated by bootc-fstab-edit.service` stamp to `/etc/fstab` | Without a `/` line, bootc's fstab generator rewrites the file at every boot and `mount` then warns that systemd's copy is stale |
 
 ### Installing
 
