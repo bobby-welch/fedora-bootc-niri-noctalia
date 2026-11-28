@@ -205,6 +205,9 @@ RUN set -eu; \
     grep -q '/drm/xe/xe\.ko' /tmp/initramfs.lst; \
     grep -q '/drm/i915/i915\.ko' /tmp/initramfs.lst; \
     grep -q 'consolefonts/latarcyrheb-sun32' /tmp/initramfs.lst; \
+    lsinitrd "$img" | awk '$1 ~ /^-/ { n = split($9, p, "/"); k = p[1] "/" p[2] "/" p[3] "/" p[4]; \
+      for (i = 1; i < n; i++) if (p[i] == "drm") { k = "drm/" p[i + 1]; break }; t[k] += $5 } \
+      END { for (k in t) printf "%7.1f MB  %s\n", t[k] / 1048576, k }' | sort -rn | head -n 25; \
     echo "initramfs: $(du -h "$img" | cut -f1), dracut modules: $(wc -l < /tmp/modules.base) -> $(wc -l < /tmp/modules.new)"; \
     rm /tmp/initramfs.lst /tmp/dracut.log /tmp/modules.base /tmp/modules.new
 
