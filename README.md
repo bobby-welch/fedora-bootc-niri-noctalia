@@ -8,6 +8,7 @@ The whole system is one container image, built daily by GitHub Actions. A laptop
 
 - **Image:** `ghcr.io/bobby-welch/fedora-bootc-niri-noctalia:45`
 - **Tested on:** Dell XPS 13 DX13260 (Intel Core 5 320, Wildcat Lake), with Secure Boot on
+- **Made for:** laptops with Intel graphics. On AMD or NVIDIA graphics it still boots, but the disk passphrase prompt appears only after Plymouth's 8-second wait, on the firmware's basic display: the initramfs leaves out those drivers.
 
 ## How it works
 

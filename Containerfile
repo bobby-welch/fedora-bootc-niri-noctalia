@@ -174,8 +174,9 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 1500:275
     && yq -e '.default[0].type == "reject"' /etc/containers/policy.json > /dev/null
 
 # Rebuild the initramfs so it includes Plymouth, whose dracut module brings in
-# the graphics drivers (drm module), then check it has Plymouth, the Intel
-# drivers and the console font from kargs.d.
+# the graphics drivers (drm module, minus our omit_drivers), then check it has
+# Plymouth, the Intel drivers and the console font from kargs.d, and not the
+# omitted drivers.
 # /root links to /var/roothome, which only exists on a booted system: create it
 # for the run. No syslog in a build container: a temporary drop-in turns it off
 # (dracut has no command-line option for it).
@@ -189,7 +190,7 @@ RUN set -eu; \
     mkdir /var/roothome; \
     mkdir -p /etc/dracut.conf.d; \
     echo 'sysloglvl=0' > /etc/dracut.conf.d/99-build-no-syslog.conf; \
-    dracut --force --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
+    DRACUT_NO_XATTR=1 dracut --force --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
       || { cat /tmp/dracut.log; exit 1; }; \
     rm /etc/dracut.conf.d/99-build-no-syslog.conf; \
     rmdir --ignore-fail-on-non-empty /etc/dracut.conf.d; \
@@ -205,9 +206,7 @@ RUN set -eu; \
     grep -q '/drm/xe/xe\.ko' /tmp/initramfs.lst; \
     grep -q '/drm/i915/i915\.ko' /tmp/initramfs.lst; \
     grep -q 'consolefonts/latarcyrheb-sun32' /tmp/initramfs.lst; \
-    lsinitrd "$img" | awk '$1 ~ /^-/ { n = split($9, p, "/"); k = p[1] "/" p[2] "/" p[3] "/" p[4]; \
-      for (i = 1; i < n; i++) if (p[i] == "drm") { k = "drm/" p[i + 1]; break }; t[k] += $5 } \
-      END { for (k in t) printf "%7.1f MB  %s\n", t[k] / 1048576, k }' | sort -rn | head -n 25; \
+    if grep -E '/drm/(nouveau|amd|radeon|nova)/|/nova-core/|firmware/(nvidia|amdgpu|radeon)/' /tmp/initramfs.lst; then exit 1; fi; \
     echo "initramfs: $(du -h "$img" | cut -f1), dracut modules: $(wc -l < /tmp/modules.base) -> $(wc -l < /tmp/modules.new)"; \
     rm /tmp/initramfs.lst /tmp/dracut.log /tmp/modules.base /tmp/modules.new
 
