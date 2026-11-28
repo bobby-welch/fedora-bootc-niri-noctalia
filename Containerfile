@@ -173,15 +173,20 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 1500:275
 # Rebuild the initramfs to pick up our dracut drop-ins (Intel graphics drivers),
 # then check it has the drivers and the console font from kargs.d.
 # /root links to /var/roothome, which only exists on a booted system: create it
-# for the run. No syslog in a build container, so don't ask dracut to use it.
+# for the run. No syslog in a build container: a temporary drop-in turns it off
+# (dracut has no command-line option for it).
 # Any dracut error fails the build.
 RUN set -eu; \
     kver=$(ls /usr/lib/modules); \
     test "$(echo "$kver" | wc -w)" = 1; \
     img="/usr/lib/modules/$kver/initramfs.img"; \
     mkdir /var/roothome; \
-    dracut --force --sysloglvl 0 --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
+    mkdir -p /etc/dracut.conf.d; \
+    echo 'sysloglvl=0' > /etc/dracut.conf.d/99-build-no-syslog.conf; \
+    dracut --force --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
       || { cat /tmp/dracut.log; exit 1; }; \
+    rm /etc/dracut.conf.d/99-build-no-syslog.conf; \
+    rmdir --ignore-fail-on-non-empty /etc/dracut.conf.d; \
     rmdir /var/roothome; \
     if grep -E 'dracut\[E\]|ERROR' /tmp/dracut.log; then exit 1; fi; \
     lsinitrd "$img" > /tmp/initramfs.lst; \
