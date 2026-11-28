@@ -19,6 +19,7 @@ COPY files/etc/yum.repos.d/ /etc/yum.repos.d/
 # bolt authorizes Thunderbolt/USB4 devices (automatically with the IOMMU on);
 # fprintd drives fingerprint readers (Noctalia's lock screen uses it over D-Bus).
 # Both start on demand, so nothing runs on laptops without the hardware.
+# pciutils (lspci) for hardware checks; it used to arrive only as a weak dep.
 RUN dnf5 install -y \
       linux-firmware \
       alsa-sof-firmware \
@@ -31,6 +32,7 @@ RUN dnf5 install -y \
       mesa-vulkan-drivers \
       libva-intel-media-driver \
       libva-utils \
+      pciutils \
       fwupd \
       upower \
       thermald \
@@ -113,16 +115,32 @@ RUN dnf5 --setopt=install_weak_deps=False install -y \
     && dnf5 clean all
 
 # Virtualization for testing images and installers. Socket-activated:
-# no daemon runs until a VM tool connects. Weak deps on, matching the
-# setup the installer was tested with.
-RUN dnf5 install -y \
+# no daemon runs until a VM tool connects. Only the libvirt drivers these
+# VMs use: libvirt-daemon-kvm adds every storage backend (iSCSI, Gluster,
+# RBD, LVM...), and iSCSI's NetworkManager hook made the login wait for
+# Wi-Fi. Weak deps off, so virt-manager doesn't pull the bundle back; kept
+# from them: SELinux policy for the TPM emulator and user-mode networking,
+# virt-manager's XML editor, and PipeWire's JACK library (instead of JACK2)
+# for QEMU's audio.
+RUN dnf5 --setopt=install_weak_deps=False install -y \
       virt-manager \
       virt-install \
       virt-viewer \
-      libvirt-daemon-kvm \
+      gtksourceview4 \
+      libvirt-daemon-driver-qemu \
+      libvirt-daemon-driver-network \
+      libvirt-daemon-driver-storage-core \
+      libvirt-daemon-driver-nodedev \
+      libvirt-daemon-driver-secret \
+      libvirt-daemon-driver-nwfilter \
+      libvirt-daemon-driver-interface \
+      libvirt-daemon-lock \
       libvirt-daemon-config-network \
       qemu-kvm \
       edk2-ovmf \
+      swtpm-selinux \
+      passt-selinux \
+      pipewire-jack-audio-connection-kit-libs \
     && dnf5 clean all
 
 # Single-maintainer COPRs: the most fragile dependencies here.

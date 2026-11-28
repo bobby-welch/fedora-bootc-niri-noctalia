@@ -35,7 +35,7 @@ recipe (Containerfile, in Git) ─► built and signed image (ghcr.io) ─► la
 2. **Repositories:** vendor repos, with signature checking on.
 3. **Hardware:** laptop firmware and drivers, audio, video acceleration, power management, Thunderbolt authorization (bolt), fingerprint readers (fprintd), printing (CUPS with its driverless filters).
 4. **Desktop and CLI:** Plymouth (boot splash and disk passphrase prompt), Niri, Noctalia, greetd, portals, and command-line tools. Weak dependencies off.
-5. **Virtualization:** libvirt, QEMU, virt-manager.
+5. **Virtualization:** virt-manager, QEMU and only the libvirt drivers the VMs use (not the `libvirt-daemon-kvm` bundle: its iSCSI part made the login wait for Wi-Fi). Weak dependencies off.
 6. **COPRs:** Ghostty, Starship, Lazygit. Single-maintainer repos, the most fragile part.
 7. **Vendor apps:** Brave, 1Password.
 8. **Font:** Nerd Font at a pinned version, checked against its SHA-256.
