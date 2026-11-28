@@ -194,7 +194,7 @@ No `dnf install` on the laptop: desktop apps come from Flatpak, system tools fro
 | --- | --- |
 | System works, something is off | `sudo bootc rollback`, then `systemctl reboot` (run again to undo) |
 | Desktop broken, system boots | Ctrl+Alt+F3, log in, same two commands |
-| System won't boot | Hold Shift (or tap Esc) after the Dell logo; pick the second GRUB entry (it boots once); then `sudo bootc rollback` |
+| System won't boot | GRUB's menu shows for one second: tap an arrow key after the Dell logo to stop it; pick the second entry (it boots once); then `sudo bootc rollback` |
 
 To keep a bad update from returning, pin a known-good build, then return to `:45` later:
 

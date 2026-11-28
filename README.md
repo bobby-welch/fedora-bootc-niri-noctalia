@@ -7,7 +7,7 @@ My personal laptop OS: [Niri](https://github.com/YaLTeR/niri) and [Noctalia](htt
 The whole system is one container image, built daily by GitHub Actions. A laptop downloads new versions in the background and switches to them on the next reboot; if something breaks, the previous version is one command away.
 
 - **Image:** `ghcr.io/bobby-welch/fedora-bootc-niri-noctalia:45`
-- **Tested on:** Dell XPS 13 (Intel Wildcat Lake)
+- **Tested on:** Dell XPS 13 DX13260 (Intel Core 5 320, Wildcat Lake), with Secure Boot on
 
 ## How it works
 
@@ -91,7 +91,7 @@ sudo cmp -n "$(stat -c %s iso/output/bootc-fedora-45-bootc-generic-iso-x86_64/bo
 
 Back up the laptop first: the install erases the disk.
 
-1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**.
+1. Boot from the USB drive (on a Dell, press F12 at the logo for the boot menu). Choose **Install fedora-bootc-niri-noctalia**. If the screen stays black or shows "Pane is dead", reboot and choose **basic graphics**. Leave Secure Boot on: the installer and the installed system boot with it.
 2. **Installation Destination:** select only the internal disk (not the USB drive) and tick **Encrypt my data**. If the disk holds an old system, choose **Reclaim space → Delete all**. Choose a strong passphrase; you type it at every boot.
 3. **Network & Host Name:** set the hostname (you can change it later). No network is needed, so "No network devices available" is fine.
 4. **User Creation:** create your user and tick **Make this user administrator**.
@@ -110,7 +110,15 @@ sudo bootc switch --enforce-container-sigpolicy ghcr.io/bobby-welch/fedora-bootc
 systemctl reboot
 ```
 
-After the reboot, `sudo bootc status` shows `signature: containerPolicy` under the image: every update is now checked against the signing key. `No changes in …` from the switch is normal when the installer's image is still the newest. bootc commands may print `mount: (hint) your fstab has been modified…`: harmless, `bootc-fstab-edit.service` adds `ro` for `/` to `/etc/fstab` at boot.
+After the reboot, `sudo bootc status` shows `signature: containerPolicy` under the image: every update is now checked against the signing key. `No changes in …` from the switch is normal when the installer's image is still the newest.
+
+### Check Secure Boot
+
+```bash
+mokutil --sb-state      # SecureBoot enabled
+```
+
+If it says disabled, turn it on in the firmware setup: `systemctl reboot --firmware-setup` opens it directly. On the XPS 13 it's under **Security → Secure Boot**. With Secure Boot on, the kernel also runs in lockdown mode.
 
 ### Hostname
 
@@ -227,6 +235,7 @@ Dell publishes firmware through LVFS; `fwupd` is in the image:
 fwupdmgr refresh
 fwupdmgr get-updates
 fwupdmgr update          # plug in the charger first
+fwupdmgr security        # the platform's security checks (HSI)
 ```
 
 ### Moving to a new Fedora release
@@ -322,7 +331,7 @@ Anything that should exist on the installed system goes in `files/` (copied to `
 
 ## Troubleshooting
 
-- **The laptop won't boot after an update:** `bootc rollback` needs a running system, so use the boot menu instead. It's hidden by default: hold **Shift** (or tap **Esc**) right after the Dell logo, pick the second entry (the previous version), log in, then run `sudo bootc rollback` to make it the default again.
+- **The laptop won't boot after an update:** `bootc rollback` needs a running system, so use the boot menu instead. It shows for only one second: tap an arrow key as soon as the Dell logo goes away, which stops the countdown, then pick the second entry (the previous version), log in, and run `sudo bootc rollback` to make it the default again.
 - **No sound:** check `wpctl status` lists the speakers. This laptop's audio needs `alsa-ucm`, which is in the image; a missing device after an update is worth a rollback.
 - **Video stutters or drains the battery:** run `vainfo`. It should name the `Intel iHD driver` and list `VAProfileAV1Profile0` and `VAProfileVP9Profile0`; an error means videos are decoded on the CPU. Fedora's build of the driver leaves out H.264 and HEVC, so those always decode on the CPU.
 - **Niri is stuck or the screen is unusable:** `Ctrl+Alt+Delete` quits Niri back to the login screen, after a confirmation. It works even if Noctalia is frozen.
