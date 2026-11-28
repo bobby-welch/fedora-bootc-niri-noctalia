@@ -27,6 +27,7 @@ RUN dnf5 install -y \
       mesa-va-drivers \
       mesa-vulkan-drivers \
       libva-intel-media-driver \
+      libva-utils \
       fwupd \
       upower \
       thermald \
