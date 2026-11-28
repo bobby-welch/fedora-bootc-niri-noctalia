@@ -1,0 +1,3 @@
+# Plymouth boot splash (rhgb) with the disk passphrase prompt; quiet keeps
+# kernel messages off the screen (Esc in the splash shows them).
+kargs = ["rhgb", "quiet"]

@@ -1,3 +1,4 @@
 # Readable console font on high-resolution screens (16x32, from kbd) for the
-# disk passphrase prompt and the login. Overrides FONT= in /etc/vconsole.conf.
+# login, the text consoles and Plymouth's text view. Overrides FONT= in
+# /etc/vconsole.conf.
 kargs = ["vconsole.font=latarcyrheb-sun32"]

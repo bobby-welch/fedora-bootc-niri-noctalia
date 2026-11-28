@@ -101,7 +101,7 @@ Back up the laptop first: the install erases the disk.
 
 Log in at the text login screen; Niri starts. `Mod` is the Super (Windows) key.
 
-The disk passphrase prompt and this login use a large console font (`latarcyrheb-sun32`, 16×32), set by the image's `vconsole.font` kernel argument. The initramfs includes the Intel graphics drivers, so the prompt also shows on an external monitor.
+The disk passphrase prompt is Plymouth's boot screen: the laptop maker's logo, a spinner and a password box (`Esc` shows the boot messages). It appears once the graphics driver is ready, a few seconds after the firmware logo, and also shows on an external monitor. This login and the text consoles (`Ctrl+Alt+F3`) use a large console font (`latarcyrheb-sun32`, 16×32), set by the image's `vconsole.font` kernel argument.
 
 ### Turn on signature enforcement
 
