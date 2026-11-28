@@ -170,6 +170,37 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 1500:275
     && /tmp/build/check-repo-gpgcheck.sh \
     && yq -e '.default[0].type == "reject"' /etc/containers/policy.json > /dev/null
 
+# Rebuild the initramfs to pick up our dracut drop-ins (Intel graphics drivers),
+# then check it has the drivers and the console font from kargs.d.
+# /root links to /var/roothome, which only exists on a booted system: create it
+# for the run. No syslog in a build container: a temporary drop-in turns it off
+# (dracut has no command-line option for it).
+# Any dracut error, or a dracut module the base initramfs had, fails the build.
+RUN set -eu; \
+    kver=$(ls /usr/lib/modules); \
+    test "$(echo "$kver" | wc -w)" = 1; \
+    img="/usr/lib/modules/$kver/initramfs.img"; \
+    lsinitrd -f usr/lib/dracut/modules.txt "$img" | sort > /tmp/modules.base; \
+    test -s /tmp/modules.base; \
+    mkdir /var/roothome; \
+    mkdir -p /etc/dracut.conf.d; \
+    echo 'sysloglvl=0' > /etc/dracut.conf.d/99-build-no-syslog.conf; \
+    dracut --force --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
+      || { cat /tmp/dracut.log; exit 1; }; \
+    rm /etc/dracut.conf.d/99-build-no-syslog.conf; \
+    rmdir --ignore-fail-on-non-empty /etc/dracut.conf.d; \
+    rmdir /var/roothome; \
+    if grep -E 'dracut\[E\]|ERROR' /tmp/dracut.log; then exit 1; fi; \
+    lsinitrd -f usr/lib/dracut/modules.txt "$img" | sort > /tmp/modules.new; \
+    missing=$(comm -23 /tmp/modules.base /tmp/modules.new); \
+    if [ -n "$missing" ]; then echo "dracut modules lost: $missing"; exit 1; fi; \
+    lsinitrd "$img" > /tmp/initramfs.lst; \
+    grep -q '/drm/xe/xe\.ko' /tmp/initramfs.lst; \
+    grep -q '/drm/i915/i915\.ko' /tmp/initramfs.lst; \
+    grep -q 'consolefonts/latarcyrheb-sun32' /tmp/initramfs.lst; \
+    echo "initramfs: $(du -h "$img" | cut -f1), dracut modules: $(wc -l < /tmp/modules.base) -> $(wc -l < /tmp/modules.new)"; \
+    rm /tmp/initramfs.lst /tmp/dracut.log /tmp/modules.base /tmp/modules.new
+
 # niri-session still calls import-environment without names; systemd 262 only
 # warns. Recheck if the session loses its environment after a systemd update.
 RUN niri validate --config /etc/niri/config.kdl
