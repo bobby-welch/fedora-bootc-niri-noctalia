@@ -1,2 +1,0 @@
-# Hide boot messages so the disk passphrase prompt stands alone.
-kargs = ["quiet"]

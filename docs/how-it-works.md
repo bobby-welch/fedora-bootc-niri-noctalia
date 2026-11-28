@@ -34,13 +34,13 @@ recipe (Containerfile, in Git) ─► built and signed image (ghcr.io) ─► la
 1. **Base:** Fedora's bootc image, pinned by digest.
 2. **Repositories:** vendor repos, with signature checking on.
 3. **Hardware:** laptop firmware and drivers, audio, video acceleration, power management, Thunderbolt authorization (bolt), fingerprint readers (fprintd), printing (CUPS with its driverless filters).
-4. **Desktop and CLI:** Niri, Noctalia, greetd, portals, and command-line tools. Weak dependencies off.
+4. **Desktop and CLI:** Plymouth (boot splash and disk passphrase prompt), Niri, Noctalia, greetd, portals, and command-line tools. Weak dependencies off.
 5. **Virtualization:** libvirt, QEMU, virt-manager.
 6. **COPRs:** Ghostty, Starship, Lazygit. Single-maintainer repos, the most fragile part.
 7. **Vendor apps:** Brave, 1Password.
 8. **Font:** Nerd Font at a pinned version, checked against its SHA-256.
 9. **Configuration:** `files/` copied to `/`, plus the public signing key.
-10. **Initramfs:** rebuilt with dracut so it includes the Intel graphics drivers (`xe`, `i915`; Fedora's bootc image leaves them out). The build fails if the drivers or the console font are missing.
+10. **Initramfs:** rebuilt with dracut so it includes Plymouth, whose dracut module brings in the graphics drivers (Fedora's bootc image has neither). NVIDIA and AMD drivers are left out (`omit_drivers` in `files/usr/lib/dracut/dracut.conf.d/60-omit-gpu-drivers.conf`): with their firmware they would double the initramfs. The build fails if Plymouth, the Intel drivers (`xe`, `i915`) or the console font are missing, or an omitted driver got in.
 11. **Checks:** the build fails if a repo lacks GPG checking, 1Password's permissions are wrong, the container policy doesn't reject by default, or the Niri config is invalid.
 12. **Services:** enable what should run (greetd, firewalld, thermald, libvirt sockets, the SSH agent); disable sshd.
 13. **Cleanup:** caches, build helpers, `/run` and `/tmp` leftovers, the random seed, authselect's build-time checksum.

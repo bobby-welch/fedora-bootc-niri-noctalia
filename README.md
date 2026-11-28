@@ -8,6 +8,7 @@ The whole system is one container image, built daily by GitHub Actions. A laptop
 
 - **Image:** `ghcr.io/bobby-welch/fedora-bootc-niri-noctalia:45`
 - **Tested on:** Dell XPS 13 DX13260 (Intel Core 5 320, Wildcat Lake), with Secure Boot on
+- **Made for:** laptops with Intel graphics. On AMD or NVIDIA graphics it still boots, but the disk passphrase prompt appears only after Plymouth's 8-second wait, on the firmware's basic display: the initramfs leaves out those drivers.
 
 ## How it works
 
@@ -101,7 +102,7 @@ Back up the laptop first: the install erases the disk.
 
 Log in at the text login screen; Niri starts. `Mod` is the Super (Windows) key.
 
-The disk passphrase prompt and this login use a large console font (`latarcyrheb-sun32`, 16×32), set by the image's `vconsole.font` kernel argument. The initramfs includes the Intel graphics drivers, so the prompt also shows on an external monitor.
+The disk passphrase prompt is Plymouth's boot screen: the laptop maker's logo, a spinner and a password box (`Esc` shows the boot messages). It appears once the graphics driver is ready, a few seconds after the firmware logo, and also shows on an external monitor. This login and the text consoles (`Ctrl+Alt+F3`) use a large console font (`latarcyrheb-sun32`, 16×32), set by the image's `vconsole.font` kernel argument.
 
 ### Turn on signature enforcement
 

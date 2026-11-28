@@ -47,7 +47,10 @@ RUN dnf5 install -y \
     && dnf5 clean all
 
 # Desktop, applications, and CLI tools.
+# plymouth-system-theme: Fedora's boot splash (bgrt), which draws the disk
+# passphrase prompt; with an encrypted disk it waits for the graphics driver.
 RUN dnf5 --setopt=install_weak_deps=False install -y \
+      plymouth-system-theme \
       greetd \
       greetd-selinux \
       tuigreet \
@@ -170,8 +173,10 @@ RUN test "$(stat -c '%g:%a' /opt/1Password/1Password-BrowserSupport)" = 1500:275
     && /tmp/build/check-repo-gpgcheck.sh \
     && yq -e '.default[0].type == "reject"' /etc/containers/policy.json > /dev/null
 
-# Rebuild the initramfs to pick up our dracut drop-ins (Intel graphics drivers),
-# then check it has the drivers and the console font from kargs.d.
+# Rebuild the initramfs so it includes Plymouth, whose dracut module brings in
+# the graphics drivers (drm module, minus our omit_drivers), then check it has
+# Plymouth, the Intel drivers and the console font from kargs.d, and not the
+# omitted drivers.
 # /root links to /var/roothome, which only exists on a booted system: create it
 # for the run. No syslog in a build container: a temporary drop-in turns it off
 # (dracut has no command-line option for it).
@@ -185,7 +190,7 @@ RUN set -eu; \
     mkdir /var/roothome; \
     mkdir -p /etc/dracut.conf.d; \
     echo 'sysloglvl=0' > /etc/dracut.conf.d/99-build-no-syslog.conf; \
-    dracut --force --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
+    DRACUT_NO_XATTR=1 dracut --force --kver "$kver" "$img" > /tmp/dracut.log 2>&1 \
       || { cat /tmp/dracut.log; exit 1; }; \
     rm /etc/dracut.conf.d/99-build-no-syslog.conf; \
     rmdir --ignore-fail-on-non-empty /etc/dracut.conf.d; \
@@ -194,10 +199,14 @@ RUN set -eu; \
     lsinitrd -f usr/lib/dracut/modules.txt "$img" | sort > /tmp/modules.new; \
     missing=$(comm -23 /tmp/modules.base /tmp/modules.new); \
     if [ -n "$missing" ]; then echo "dracut modules lost: $missing"; exit 1; fi; \
+    grep -qx plymouth /tmp/modules.new; \
+    grep -qx drm /tmp/modules.new; \
     lsinitrd "$img" > /tmp/initramfs.lst; \
+    grep -q 'plymouth/themes/bgrt/bgrt\.plymouth' /tmp/initramfs.lst; \
     grep -q '/drm/xe/xe\.ko' /tmp/initramfs.lst; \
     grep -q '/drm/i915/i915\.ko' /tmp/initramfs.lst; \
     grep -q 'consolefonts/latarcyrheb-sun32' /tmp/initramfs.lst; \
+    if grep -E '/drm/(nouveau|amd|radeon|nova)/|/nova-core/|firmware/(nvidia|amdgpu|radeon)/' /tmp/initramfs.lst; then exit 1; fi; \
     echo "initramfs: $(du -h "$img" | cut -f1), dracut modules: $(wc -l < /tmp/modules.base) -> $(wc -l < /tmp/modules.new)"; \
     rm /tmp/initramfs.lst /tmp/dracut.log /tmp/modules.base /tmp/modules.new
 
