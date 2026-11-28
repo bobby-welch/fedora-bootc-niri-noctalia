@@ -314,7 +314,7 @@ virt-manager, libvirt and QEMU are in the image, for trying installers and risky
 virt-manager --connect qemu:///system     # asks for your password once
 ```
 
-UEFI with Secure Boot, an emulated TPM and a NAT network (`virbr0`, 192.168.122.0/24) are available. Copy ISOs to `/var/lib/libvirt/images` first: QEMU isn't allowed to read files in your home directory.
+UEFI with Secure Boot, an emulated TPM and a NAT network (`virbr0`, 192.168.122.0/24) are available. Storage is disk images in folders; network storage pools (iSCSI, NFS, Gluster, Ceph) aren't installed. Copy ISOs to `/var/lib/libvirt/images` first: QEMU isn't allowed to read files in your home directory.
 
 ## Building and testing locally
 
